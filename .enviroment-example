@@ -1,0 +1,7 @@
+DB_HOST=localhost
+DB_PORT=5433
+DB_USER=postgres
+DB_PASSWORD=db_pass
+DB_NAME=db_name
+
+JWT_SECRET = secret
