@@ -4,4 +4,4 @@ DB_USER=postgres
 DB_PASSWORD=db_pass
 DB_NAME=db_name
 
-JWT_SECRET = secret
+JWT_SECRET=secret
