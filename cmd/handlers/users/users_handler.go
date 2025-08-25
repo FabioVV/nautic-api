@@ -2,10 +2,11 @@ package users
 
 import (
 	"nautic/cmd/storage"
+	"nautic/cmd/utils"
+
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
 )
-
 
 func InsertUser(c echo.Context) error {
 	db := storage.GetDB()
@@ -15,7 +16,7 @@ func InsertUser(c echo.Context) error {
 	phone := c.FormValue("phone")
 	password := c.FormValue("password")
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password),bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
@@ -23,6 +24,9 @@ func InsertUser(c echo.Context) error {
 
 	_, err = db.Exec(query, name, email, phone, hashedPassword)
 	if err != nil {
+		if errU, ok := utils.CheckForUserError("email_unique", err); ok {
+			return echo.NewHTTPError(errU.HttpErrCode, errU)
+		}
 		return err
 	}
 

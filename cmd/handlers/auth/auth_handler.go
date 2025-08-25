@@ -14,7 +14,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-
 func Login(c echo.Context) error {
 	db := storage.GetDB()
 	if db == nil {
@@ -25,22 +24,18 @@ func Login(c echo.Context) error {
 	email := c.FormValue("email")
 	password := c.FormValue("password")
 
-
-	query := `SELECT name, password FROM users WHERE email = $1`
+	query := `SELECT name, password_hash FROM users WHERE email = $1`
 	err := db.QueryRow(query, email).Scan(&user.Name, &user.PasswordHash)
 	if err != nil {
-		if err == sql.ErrNoRows{
+		if err == sql.ErrNoRows {
 			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid credentials")
-
 		}
 		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error (db)")
 	}
 
-
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
 		return err
 	}
-
 
 	claims := &auth.JwtCustomClaims{
 		user.Name,
@@ -53,7 +48,7 @@ func Login(c echo.Context) error {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	t, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
-	if err != nil{
+	if err != nil {
 		return err
 	}
 

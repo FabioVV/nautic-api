@@ -9,15 +9,13 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
-	"nautic/cmd/storage"
 	"nautic/auth"
-	"nautic/cmd/handlers/users"
 	"nautic/cmd/handlers/auth"
-
+	"nautic/cmd/handlers/users"
+	"nautic/cmd/storage"
 )
 
-
-func main(){
+func main() {
 	e := echo.New()
 
 	if err := godotenv.Load(); err != nil {
@@ -25,6 +23,8 @@ func main(){
 	}
 
 	storage.InitDB()
+	defer storage.CloseDB()
+
 	configJwt := auth.GetJwtConfig()
 
 	e.Use(middleware.Logger())
@@ -35,16 +35,15 @@ func main(){
 		AllowHeaders: []string{},
 	}))
 
+	e.POST("/tmpr", users.InsertUser)
+
 	authRoutes := e.Group("/auth")
 	authRoutes.POST("/signin", auth_h.Login)
-
 
 	userRoutes := e.Group("/users")
 	userRoutes.Use(echojwt.WithConfig(configJwt))
 
 	userRoutes.POST("", users.InsertUser)
-
-
 
 	e.Logger.Fatal(e.Start(":8080"))
 }
