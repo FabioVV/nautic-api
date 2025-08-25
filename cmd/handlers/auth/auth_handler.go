@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"nautic/auth"
 	"nautic/cmd/storage"
+	"nautic/cmd/utils"
 	"nautic/models"
 	"net/http"
 	"os"
@@ -34,6 +35,9 @@ func Login(c echo.Context) error {
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
+		if errU, ok := utils.GetUserError(err.Error()); ok {
+			return echo.NewHTTPError(errU.HttpErrCode, errU)
+		}
 		return err
 	}
 
