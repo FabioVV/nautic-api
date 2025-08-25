@@ -8,20 +8,23 @@ import (
 )
 
 
+
 type JwtCustomClaims struct {
 	Name string `json:"name"`
-	Admin bool `json:"admin"`
+	Role string `json:"role"`
 	jwt.RegisteredClaims
 }
 
-var config = echojwt.Config{
-	NewClaimsFunc: func(c echo.Context) jwt.Claims{
-		return new(JwtCustomClaims)
-	},
-	SigningKey: []byte(os.Getenv("JWT_SECRET")),
-}
 
 func GetJwtConfig() echojwt.Config {
+	var config = echojwt.Config{
+		NewClaimsFunc: func(c echo.Context) jwt.Claims{
+			return new(JwtCustomClaims)
+		},
+		SigningKey: []byte(os.Getenv("JWT_SECRET")),
+	}
+
+
 	return config;
 }
 
