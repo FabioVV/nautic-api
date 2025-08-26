@@ -1,51 +1,77 @@
 package users
 
 import (
-	"nautic/cmd/storage"
-	"nautic/cmd/utils"
+	"nautic/cmd/repositories"
+	"nautic/models"
+
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func InsertUser(c echo.Context) error {
-	db := storage.GetDB()
+	user := new(models.CreateUserRequest)
 
-
-	name := c.FormValue("name")
-	email := c.FormValue("email")
-	phone := c.FormValue("phone")
-	password := c.FormValue("password")
-
-	if !utils.IsGoodText(name) {
-		return echo.NewHTTPError(http.StatusBadRequest, "Name is required")
+	if err := c.Bind(user); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request payload")
 	}
 
-	if !utils.IsValidEmail(email) {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid email address")
+	if err := c.Validate(user); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 	}
 
-	if errMsg, ok := utils.IsGoodPassword(password); !ok {
-		return echo.NewHTTPError(http.StatusBadRequest, errMsg)
-	}
-
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
-	query := "INSERT INTO users (name, email, phone, password_hash) VALUES ($1, $2, $3, $4)"
-
-	_, err = db.Exec(query, name, email, phone, hashedPassword)
-	if err != nil {
-		if errU, ok := utils.CheckForUserError("unique_email", err); ok {
-			return echo.NewHTTPError(errU.HttpErrCode, errU)
-		}
+	if err := repositories.InsertUser(user); err != nil {
 		return err
 	}
 
 	return c.JSON(http.StatusCreated, echo.Map{
 		"message": "user created successfully",
-		"status": "success",
+		"status":  "success",
+	})
+}
+
+func GetUser(c echo.Context) error {
+	idParam := c.Param("id")
+
+	userID, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID format")
+	}
+
+	user, err := repositories.GetUser(userID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, user)
+}
+
+func UpdateUser(c echo.Context) error {
+	idParam := c.Param("id")
+
+	user := new(models.UpdateUserRequest)
+
+	if err := c.Bind(user); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request payload")
+	}
+
+	if err := c.Validate(user); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	userID, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID format")
+	}
+
+	err = repositories.UpdateUser(userID, user)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "user updated successfully",
+		"status":  "success",
 	})
 }

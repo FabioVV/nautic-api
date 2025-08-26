@@ -14,6 +14,7 @@ type UserError struct {
 	HttpErrCode int
 	ErrCode     string
 	Message     string
+	Status      string `json:"status"`
 }
 
 var UserErrsMap = map[string]UserError{
@@ -21,11 +22,13 @@ var UserErrsMap = map[string]UserError{
 		HttpErrCode: http.StatusBadRequest,
 		Message:     "Email already registered",
 		ErrCode:     "u1",
+		Status:      "error",
 	},
 	"crypto/bcrypt: hashedPassword is not the hash of the given password": {
 		HttpErrCode: http.StatusUnauthorized,
 		Message:     "Invalid credentials",
 		ErrCode:     "u2",
+		Status:      "error",
 	},
 }
 
