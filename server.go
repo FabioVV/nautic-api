@@ -40,6 +40,7 @@ func main() {
 	authRoutes := e.Group("/auth")
 	authRoutes.POST("/signin", auth_h.Login)
 
+
 	userRoutes := e.Group("/users")
 	userRoutes.Use(echojwt.WithConfig(configJwt))
 
