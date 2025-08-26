@@ -17,7 +17,7 @@ type UserError struct {
 }
 
 var UserErrsMap = map[string]UserError{
-	"email_unique": {
+	"unique_email": {
 		HttpErrCode: http.StatusBadRequest,
 		Message:     "Email already registered",
 		ErrCode:     "u1",
