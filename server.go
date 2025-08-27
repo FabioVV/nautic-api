@@ -58,8 +58,8 @@ func main() {
 
 	userRoutes.POST("", users.InsertUser)
 	userRoutes.GET("/:id", users.GetUser)
-	userRoutes.PATCH("/:id", users.InsertUser)
-	userRoutes.DELETE("/:id", users.InsertUser)
+	userRoutes.PATCH("/:id", users.UpdateUser)
+	userRoutes.DELETE("/:id", users.DeactivateUser)
 
 	e.Logger.Fatal(e.Start(":8080"))
 }

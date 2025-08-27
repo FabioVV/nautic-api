@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"database/sql"
+	"fmt"
 	"nautic/cmd/storage"
 	"nautic/cmd/utils"
 	"nautic/models"
@@ -11,11 +12,12 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+//
 func GetUser(id int) (models.User, error) {
 	db := storage.GetDB()
 
 	var user models.User
-	query := `SELECT id, name, email, active, phone, created_at, updated_at FROM users WHERE id = $1`
+	query := `SELECT id, name, email, active, phone, created_at, updated_at FROM users WHERE id = $1 AND active = 'Y'`
 
 	err := db.QueryRow(query, id).Scan(&user.Id, &user.Name, &user.Email, &user.Active, &user.Phone, &user.CreatedAt, &user.UpdatedAt)
 
@@ -54,7 +56,72 @@ func InsertUser(user *models.CreateUserRequest) error {
 }
 
 func UpdateUser(id int, user *models.UpdateUserRequest) error {
-	//db := storage.GetDB()
+	db := storage.GetDB()
+
+	_, err := GetUser(id)
+	if err != nil {
+		return err
+	}
+
+	query := `UPDATE users SET`
+	params := []interface{}{}
+	paramCount := 0
+
+	if user.Name != nil {
+		paramCount++
+		query += fmt.Sprintf("name = $%d, ", paramCount)
+		params = append(params, *user.Name)
+	}
+	if user.Email != nil {
+		paramCount++
+		query += fmt.Sprintf("email = $%d, ", paramCount)
+		params = append(params, *user.Email)
+	}
+	if user.Phone != nil {
+		paramCount++
+		query += fmt.Sprintf("phone = $%d, ", paramCount)
+		params = append(params, *user.Phone)
+	}
+	if user.Active != nil {
+		paramCount++
+		query += fmt.Sprintf("active = $%d, ", paramCount)
+		params = append(params, *user.Active)
+	}
+
+	if len(params) == 0 {
+		return nil
+	}
+
+	//Remove the trailing comma and space from the query
+	query = query[:len(query)-2]
+
+	paramCount++
+	query += fmt.Sprintf(" WHERE id = $%d", paramCount)
+	params = append(params, id)
+
+	_, err = db.Exec(query, params...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+func DeactivateUser(id int) error {
+	db := storage.GetDB()
+
+	_, err := GetUser(id)
+	if err != nil {
+		return err
+	}
+
+	query := `UPDATE users SET active = 'N' WHERE id = $1`
+
+	_, err = db.Exec(query, id)
+	if err != nil {
+		return err
+	}
 
 	return nil
 

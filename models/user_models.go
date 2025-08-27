@@ -10,11 +10,10 @@ type CreateUserRequest struct {
 }
 
 type UpdateUserRequest struct {
-	Name     string `json:"name" validate:"required"`
-	Email    string `json:"email" validate:"required,email"`
-	Phone    string `json:"phone"`
-	Password string `json:"password" validate:"required,min=8"`
-	Active   string `json:"active"`
+	Name     *string `json:"name,omitempty" validate:""`
+	Email    *string `json:"email,omitempty" validate:"email"`
+	Phone    *string `json:"phone,omitempty"`
+	Active   *string `json:"active,omitempty"`
 }
 
 type User struct {

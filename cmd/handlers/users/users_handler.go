@@ -28,7 +28,6 @@ func InsertUser(c echo.Context) error {
 
 	return c.JSON(http.StatusCreated, echo.Map{
 		"message": "user created successfully",
-		"status":  "success",
 	})
 }
 
@@ -58,7 +57,7 @@ func UpdateUser(c echo.Context) error {
 	}
 
 	if err := c.Validate(user); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
 	}
 
 	userID, err := strconv.Atoi(idParam)
@@ -73,6 +72,23 @@ func UpdateUser(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, echo.Map{
 		"message": "user updated successfully",
-		"status":  "success",
+	})
+}
+
+func DeactivateUser(c echo.Context) error {
+	idParam := c.Param("id")
+
+	userID, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID format")
+	}
+
+	err = repositories.DeactivateUser(userID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "user deactivated successfully",
 	})
 }
