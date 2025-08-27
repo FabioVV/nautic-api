@@ -2,7 +2,8 @@ package main
 
 import (
 	"log"
-	"net/http"
+	"reflect"
+	"strings"
 
 	"github.com/go-playground/validator"
 	"github.com/joho/godotenv"
@@ -15,23 +16,20 @@ import (
 	auth_h "nautic/cmd/handlers/auth"
 	"nautic/cmd/handlers/users"
 	"nautic/cmd/storage"
+	"nautic/validation"
 )
-
-type CustomValidator struct {
-	validator *validator.Validate
-}
-
-func (cv *CustomValidator) Validate(i interface{}) error {
-	if err := cv.validator.Struct(i); err != nil {
-		// Optionally, you could return the error to give each route more control over the status code
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
-	}
-	return nil
-}
 
 func main() {
 	e := echo.New()
-	e.Validator = &CustomValidator{validator: validator.New()}
+	vali := validator.New()
+	vali.RegisterTagNameFunc(func(fld reflect.StructField) string {
+		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+		if name == "-" {
+			return ""
+		}
+		return name
+	})
+	e.Validator = &validation.CustomValidator{Validator: vali}
 
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("error loading .env file")

@@ -3,6 +3,7 @@ package users
 import (
 	"nautic/cmd/repositories"
 	"nautic/models"
+	"nautic/validation"
 
 	"net/http"
 	"strconv"
@@ -18,7 +19,7 @@ func InsertUser(c echo.Context) error {
 	}
 
 	if err := c.Validate(user); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
 	}
 
 	if err := repositories.InsertUser(user); err != nil {
