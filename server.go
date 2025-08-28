@@ -2,8 +2,6 @@ package main
 
 import (
 	"log"
-	"reflect"
-	"strings"
 
 	"github.com/go-playground/validator"
 	"github.com/joho/godotenv"
@@ -22,13 +20,7 @@ import (
 func main() {
 	e := echo.New()
 	vali := validator.New()
-	vali.RegisterTagNameFunc(func(fld reflect.StructField) string {
-		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
-		if name == "-" {
-			return ""
-		}
-		return name
-	})
+	vali.RegisterTagNameFunc(validation.GetJsonStructName)
 	e.Validator = &validation.CustomValidator{Validator: vali}
 
 	if err := godotenv.Load(); err != nil {
@@ -44,16 +36,17 @@ func main() {
 	e.Use(middleware.Recover())
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"localhost:8080", "localhost:8081"},
-		AllowHeaders: []string{},
+		AllowOrigins: []string{"localhost:8080", "http://localhost:4200", "localhost:4200", "http://127.0.0.1:4200"},
 	}))
 
 	e.POST("/tmpr", users.InsertUser)
 
-	authRoutes := e.Group("/auth")
+	apiv1 := e.Group("/api/v1")
+
+	authRoutes := apiv1.Group("/auth")
 	authRoutes.POST("/signin", auth_h.Login)
 
-	userRoutes := e.Group("/users")
+	userRoutes := apiv1.Group("/users")
 	userRoutes.Use(echojwt.WithConfig(configJwt))
 
 	userRoutes.POST("", users.InsertUser)

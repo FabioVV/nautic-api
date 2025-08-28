@@ -1,9 +1,22 @@
 package validation
 
-import "github.com/go-playground/validator"
+import (
+	"reflect"
+	"strings"
+
+	"github.com/go-playground/validator"
+)
 
 type CustomValidator struct {
 	Validator *validator.Validate
+}
+
+func GetJsonStructName(fld reflect.StructField) string {
+	name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+	if name == "-" {
+		return ""
+	}
+	return name
 }
 
 func (cv *CustomValidator) Validate(i interface{}) error {
@@ -15,15 +28,15 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 
 func MsgForErrorTag(tag string) string {
 	switch tag {
-		case "required":
-			return "This field is required"
-		case "email":
-			return "Invalid email"
+	case "required":
+		return "This field is required"
+	case "email":
+		return "Invalid email"
 	}
 	return ""
 }
 
-func FmtErrReturn(err error)[]map[string]string {
+func FmtErrReturn(err error) []map[string]string {
 	out := make([]map[string]string, len(err.(validator.ValidationErrors)))
 
 	for i, err := range err.(validator.ValidationErrors) {

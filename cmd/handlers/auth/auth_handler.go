@@ -6,6 +6,7 @@ import (
 	"nautic/cmd/storage"
 	"nautic/cmd/utils"
 	"nautic/models"
+	"nautic/validation"
 	"net/http"
 	"os"
 	"time"
@@ -17,16 +18,22 @@ import (
 
 func Login(c echo.Context) error {
 	db := storage.GetDB()
-	if db == nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Connection failed")
+
+	lr := new(models.LoginRequest)
+	var name string
+	var email string
+	var password string
+
+	if err := c.Bind(lr); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request payload")
 	}
 
-	var user models.User
-	email := c.FormValue("email")
-	password := c.FormValue("password")
+	if err := c.Validate(lr); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
+	}
 
-	query := `SELECT name, password_hash FROM users WHERE email = $1`
-	err := db.QueryRow(query, email).Scan(&user.Name, &user.PasswordHash)
+	query := `SELECT name, email, password_hash FROM users WHERE email = $1`
+	err := db.QueryRow(query, lr.Email).Scan(&name, &email, &password)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid credentials")
@@ -34,7 +41,7 @@ func Login(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Internal server error (db)")
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(password), []byte(lr.Password)); err != nil {
 		if errU, ok := utils.GetUserError(err.Error()); ok {
 			return echo.NewHTTPError(errU.HttpErrCode, errU)
 		}
@@ -42,7 +49,7 @@ func Login(c echo.Context) error {
 	}
 
 	claims := &auth.JwtCustomClaims{
-		user.Name,
+		name,
 		"No role yet",
 		jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 72)),
@@ -58,6 +65,8 @@ func Login(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, echo.Map{
 		"token": t,
+		"name":  name,
+		"email": email,
 	})
 
 }
