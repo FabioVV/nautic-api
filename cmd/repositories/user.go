@@ -31,9 +31,8 @@ func GetUserRoles(id int) ([]string, error) {
 		return roles, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve user")
 	}
 
-	var role string
-
 	for rows.Next() {
+		var role string
 		rows.Scan(&role)
 		roles = append(roles, role)
 	}
@@ -91,6 +90,30 @@ func GetUser(id int) (models.User, error) {
 	}
 
 	return user, nil
+}
+
+func GetUsers() ([]models.User, error) {
+	db := storage.GetDB()
+
+	var users []models.User
+	query := `SELECT id, name, email, active, created_at, updated_at FROM users`
+
+	rows, err := db.Query(query)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return users, echo.NewHTTPError(http.StatusNotFound, "Users not found")
+		}
+		return users, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve users")
+	}
+
+	for rows.Next() {
+		var curUser models.User
+		rows.Scan(&curUser.Id, &curUser.Name, &curUser.Email, &curUser.Active, &curUser.CreatedAt, &curUser.UpdatedAt)
+		users = append(users, curUser)
+	}
+
+	return users, nil
 }
 
 func InsertUser(user *models.CreateUserRequest) error {

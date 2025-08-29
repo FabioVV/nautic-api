@@ -32,7 +32,7 @@ func main() {
 
 	configJwt := auth.GetJwtConfig()
 
-	e.Use(middleware.Logger())
+	//e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
@@ -40,19 +40,23 @@ func main() {
 	}))
 
 	e.POST("/tmpr", users.InsertUser)
-
 	apiv1 := e.Group("/api/v1")
 
+	/*AUTH ROUTES*/
 	authRoutes := apiv1.Group("/auth")
 	authRoutes.POST("/signin", auth_h.Login)
+	/*AUTH ROUTES*/
 
+	/*USER ROUTES*/
 	userRoutes := apiv1.Group("/users")
 	userRoutes.Use(echojwt.WithConfig(configJwt))
+	userRoutes.Use(auth_h.CheckRoleAndPermissions)
 
 	userRoutes.POST("", users.InsertUser)
+	userRoutes.GET("", users.GetUsers)
 	userRoutes.GET("/:id", users.GetUser)
 	userRoutes.PATCH("/:id", users.UpdateUser)
 	userRoutes.DELETE("/:id", users.DeactivateUser)
-
+	/*USER ROUTES*/
 	e.Logger.Fatal(e.Start(":8080"))
 }

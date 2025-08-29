@@ -47,6 +47,15 @@ func GetUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, user)
 }
 
+func GetUsers(c echo.Context) error {
+	users, err := repositories.GetUsers()
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, users)
+}
+
 func UpdateUser(c echo.Context) error {
 	idParam := c.Param("id")
 
