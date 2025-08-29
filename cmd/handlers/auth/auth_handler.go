@@ -3,6 +3,7 @@ package auth_h
 import (
 	"database/sql"
 	"nautic/auth"
+	r "nautic/cmd/repositories"
 	"nautic/cmd/storage"
 	"nautic/cmd/utils"
 	"nautic/models"
@@ -23,6 +24,7 @@ func Login(c echo.Context) error {
 	var name string
 	var email string
 	var password string
+	var id int
 
 	if err := c.Bind(lr); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request payload")
@@ -32,8 +34,8 @@ func Login(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
 	}
 
-	query := `SELECT name, email, password_hash FROM users WHERE email = $1`
-	err := db.QueryRow(query, lr.Email).Scan(&name, &email, &password)
+	query := `SELECT id, name, email, password_hash FROM users WHERE email = $1`
+	err := db.QueryRow(query, lr.Email).Scan(&id, &name, &email, &password)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid credentials")
@@ -48,9 +50,20 @@ func Login(c echo.Context) error {
 		return err
 	}
 
+	userRoles, err := r.GetUserRoles(id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve user roles during auth: "+err.Error())
+	}
+
+	userPermissions, err := r.GetUserPermissions(id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve user permissions during auth: "+err.Error())
+	}
+
 	claims := &auth.JwtCustomClaims{
 		name,
-		"No role yet",
+		userRoles,
+		userPermissions,
 		jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 72)),
 		},

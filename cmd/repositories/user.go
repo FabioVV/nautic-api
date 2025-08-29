@@ -12,14 +12,76 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-//
+func GetUserRoles(id int) ([]string, error) {
+	db := storage.GetDB()
+
+	query := `SELECT R.name
+	FROM user_roles AS UR
+	INNER JOIN roles AS R ON UR.role_id = R.id
+	WHERE UR.user_id = $1
+	`
+
+	var roles []string
+
+	rows, err := db.Query(query, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return roles, nil
+		}
+		return roles, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve user")
+	}
+
+	var role string
+
+	for rows.Next() {
+		rows.Scan(&role)
+		roles = append(roles, role)
+	}
+
+	if rows.Err() != nil {
+		return []string{}, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve user roles")
+	}
+
+	return roles, nil
+}
+
+func GetUserPermissions(id int) ([]string, error) {
+	db := storage.GetDB()
+
+	query := `SELECT UP.code
+	FROM user_permissions AS UP
+	INNER JOIN users AS U ON UP.id_user = U.id AND U.active = 'Y'
+	WHERE UP.id_user = $1
+	`
+
+	var permissions []string
+
+	rows, err := db.Query(query, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return permissions, nil
+		}
+		return permissions, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve user")
+	}
+
+	var permission string
+	for rows.Next() {
+		rows.Scan(&permission)
+		permissions = append(permissions, permission)
+	}
+
+	if rows.Err() != nil {
+		return []string{}, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve user permissions")
+	}
+
+	return permissions, nil
+}
+
 func GetUser(id int) (models.User, error) {
 	db := storage.GetDB()
 
 	var user models.User
 	query := `SELECT id, name, email, active, phone, created_at, updated_at FROM users WHERE id = $1 AND active = 'Y'`
-
-	err := db.QueryRow(query, id).Scan(&user.Id, &user.Name, &user.Email, &user.Active, &user.Phone, &user.CreatedAt, &user.UpdatedAt)
 
 	if err := db.QueryRow(query, id).Scan(&user.Id, &user.Name, &user.Email, &user.Active, &user.Phone, &user.CreatedAt, &user.UpdatedAt); err != nil {
 		if err == sql.ErrNoRows {
@@ -28,7 +90,7 @@ func GetUser(id int) (models.User, error) {
 		return user, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve user")
 	}
 
-	return user, err
+	return user, nil
 }
 
 func InsertUser(user *models.CreateUserRequest) error {
