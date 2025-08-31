@@ -16,6 +16,15 @@ type UpdateUserRequest struct {
 	Active   *string `json:"active,omitempty"`
 }
 
+type UpdateUserWithPasswordRequest struct {
+	Name     *string `json:"name,omitempty" validate:""`
+	Email    *string `json:"email,omitempty" validate:"email"`
+	Phone    *string `json:"phone,omitempty"`
+	Active   *string `json:"active,omitempty"`
+	NewPassword string `json:"new_password" validate:"required,min=8"`
+	OldPassword string `json:"old_password" validate:"required,min=8"`
+}
+
 type User struct {
 	Id           int64     `json:"id"`
 	Name         string    `json:"name"`

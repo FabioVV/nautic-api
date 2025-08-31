@@ -15,6 +15,7 @@ import (
 	"nautic/cmd/handlers/users"
 	"nautic/cmd/storage"
 	"nautic/validation"
+	nmiddleware "nautic/cmd/middleware"
 )
 
 func main() {
@@ -50,7 +51,7 @@ func main() {
 	/*USER ROUTES*/
 	userRoutes := apiv1.Group("/users")
 	userRoutes.Use(echojwt.WithConfig(configJwt))
-	userRoutes.Use(auth_h.CheckRoleAndPermissions)
+	userRoutes.Use(nmiddleware.CheckRoleAndPermissions)
 
 	userRoutes.POST("", users.InsertUser)
 	userRoutes.GET("", users.GetUsers)

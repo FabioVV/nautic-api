@@ -8,6 +8,7 @@ import (
 /*
  Definition of user errors
  Used to make error returning easier in the API
+ ! CURRENTLY NOT WIDELY USED !
 */
 
 type UserError struct {
