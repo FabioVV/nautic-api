@@ -9,7 +9,7 @@ import (
 
 type JwtCustomClaims struct {
 	Name        string   `json:"name"`
-	Roles       []string `json:"role"`
+	Roles       []string `json:"roles"`
 	Permissions []string `json:"permissions"`
 	jwt.RegisteredClaims
 }
