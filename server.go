@@ -13,9 +13,9 @@ import (
 	"nautic/auth"
 	auth_h "nautic/cmd/handlers/auth"
 	"nautic/cmd/handlers/users"
+	nmiddleware "nautic/cmd/middleware"
 	"nautic/cmd/storage"
 	"nautic/validation"
-	nmiddleware "nautic/cmd/middleware"
 )
 
 func main() {

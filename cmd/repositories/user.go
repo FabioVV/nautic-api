@@ -7,6 +7,8 @@ import (
 	"nautic/cmd/utils"
 	"nautic/models"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
@@ -92,28 +94,80 @@ func GetUser(id int) (models.User, error) {
 	return user, nil
 }
 
-func GetUsers() ([]models.User, error) {
+func GetUsers(pagenum string, limitPerPage string, name string, email string, active string) ([]models.User, int, error) {
 	db := storage.GetDB()
 
-	var users []models.User
-	query := `SELECT id, name, email, active, created_at, updated_at FROM users`
+	pagenumber, err := strconv.Atoi(pagenum)
+	if err != nil {
+		return nil, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve users (PG1)")
+	}
+	limit, err := strconv.Atoi(limitPerPage)
+	if err != nil {
+		return nil, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve users (PG2)")
+	}
 
-	rows, err := db.Query(query)
+	offset := (pagenumber - 1) * limit
+
+	var users []models.User
+
+	conds := []string{}
+	args := []interface{}{}
+	paramCount := 1
+
+	if name != "" {
+		conds = append(conds, fmt.Sprintf("U.name ILIKE $%d", paramCount))
+		args = append(args, "%"+name+"%")
+		paramCount++
+	}
+
+	if email != "" {
+		conds = append(conds, fmt.Sprintf("U.email ILIKE $%d", paramCount))
+		args = append(args, "%"+email+"%")
+		paramCount++
+	}
+
+	if active != "" {
+		conds = append(conds, fmt.Sprintf("U.active = $%d", paramCount))
+		args = append(args, active)
+		paramCount++
+	}
+
+	where := ""
+	if len(conds) > 0 {
+		where = "WHERE " + strings.Join(conds, " AND ")
+	}
+
+	//append pagination range
+	args = append(args, limitPerPage, offset)
+	limitArgPos := paramCount
+	offsetArgPos := paramCount + 1
+
+	query := fmt.Sprintf(`
+	SELECT U.id, U.name, U.email, U.active, U.created_at, U.updated_at
+	FROM users AS U
+	%s
+	ORDER BY U.name
+	LIMIT $%d OFFSET $%d
+	`, where, limitArgPos, offsetArgPos)
+
+	rows, err := db.Query(query, args...)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return users, echo.NewHTTPError(http.StatusNotFound, "Users not found")
+			return users, 0, echo.NewHTTPError(http.StatusNotFound, "Users not found")
 		}
-		return users, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve users")
+		return users, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve users"+err.Error())
 	}
 
+	numRecords := 0
 	for rows.Next() {
 		var curUser models.User
 		rows.Scan(&curUser.Id, &curUser.Name, &curUser.Email, &curUser.Active, &curUser.CreatedAt, &curUser.UpdatedAt)
 		users = append(users, curUser)
+		numRecords++
 	}
 
-	return users, nil
+	return users, numRecords, nil
 }
 
 func InsertUser(user *models.CreateUserRequest) error {

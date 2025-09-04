@@ -48,12 +48,22 @@ func GetUser(c echo.Context) error {
 }
 
 func GetUsers(c echo.Context) error {
-	users, err := repositories.GetUsers()
+
+	qpage := c.QueryParams().Get("pageNumber")
+	qperpage := c.QueryParams().Get("perPage")
+	qname := c.QueryParams().Get("name")
+	qemail := c.QueryParams().Get("email")
+	qactive := c.QueryParams().Get("active")
+
+	users, numRecords, err := repositories.GetUsers(qpage, qperpage, qname, qemail, qactive)
 	if err != nil {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, users)
+	return c.JSON(http.StatusOK, echo.Map{
+		"data":         users,
+		"totalRecords": numRecords,
+	})
 }
 
 func UpdateUser(c echo.Context) error {
