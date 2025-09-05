@@ -166,7 +166,7 @@ func GetUsers(pagenum string, limitPerPage string, name string, email string, ac
 	`, where)
 	//println(queryTotalRecords)
 
-	rowsCount := db.QueryRow(queryTotalRecords, args[:len(args)-2]...)
+	rowsCount := db.QueryRow(queryTotalRecords, args[:len(args)-2]...)// slice to remove the limit and offset args, they are not needed here
 	numRecords := 0
 	rowsCount.Scan(&numRecords)
 
