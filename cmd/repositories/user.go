@@ -253,7 +253,6 @@ func UpdateUser(id int, user *models.UpdateUserRequest) error {
 	}
 
 	return nil
-
 }
 
 func DeactivateUser(id int) error {
