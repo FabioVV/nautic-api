@@ -146,7 +146,7 @@ func GetUsers(pagenum string, limitPerPage string, name string, email string, ac
 	SELECT U.id, U.name, U.email, U.active, U.created_at, U.updated_at
 	FROM users AS U
 	%s
-	ORDER BY U.name
+	ORDER BY U.id, U.name
 	LIMIT $%d OFFSET $%d
 	`, where, limitArgPos, offsetArgPos)
 
@@ -159,12 +159,21 @@ func GetUsers(pagenum string, limitPerPage string, name string, email string, ac
 		return users, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve users"+err.Error())
 	}
 
+	queryTotalRecords := fmt.Sprintf(`
+	SELECT COUNT(1)
+	FROM users AS U
+	%s
+	`, where)
+	//println(queryTotalRecords)
+
+	rowsCount := db.QueryRow(queryTotalRecords, args[:len(args)-2]...)
 	numRecords := 0
+	rowsCount.Scan(&numRecords)
+
 	for rows.Next() {
 		var curUser models.User
 		rows.Scan(&curUser.Id, &curUser.Name, &curUser.Email, &curUser.Active, &curUser.CreatedAt, &curUser.UpdatedAt)
 		users = append(users, curUser)
-		numRecords++
 	}
 
 	return users, numRecords, nil
