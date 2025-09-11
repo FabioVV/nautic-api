@@ -17,7 +17,18 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+func GetPermissions(c echo.Context) error {
 
+	perms, err := repositories.GetPermissions()
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"data":         perms,
+		"totalRecords": 100,
+	})
+}
 
 func Login(c echo.Context) error {
 	db := storage.GetDB()

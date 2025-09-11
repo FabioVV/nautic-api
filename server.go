@@ -43,10 +43,10 @@ func main() {
 	e.POST("/tmpr", users.InsertUser)
 	apiv1 := e.Group("/api/v1")
 
-	/*AUTH ROUTES*/
+	/*AUTHENTICATION ROUTES*/
 	authRoutes := apiv1.Group("/auth")
 	authRoutes.POST("/signin", auth_h.Login)
-	/*AUTH ROUTES*/
+	/*AUTHENTICATION ROUTES*/
 
 	/*USER ROUTES*/
 	userRoutes := apiv1.Group("/users")
@@ -59,5 +59,14 @@ func main() {
 	userRoutes.PATCH("/:id", users.UpdateUser)
 	userRoutes.DELETE("/:id", users.DeactivateUser)
 	/*USER ROUTES*/
+
+	/*PERMISSIONS/ROLES ROUTES*/
+	permsRoutes := apiv1.Group("/permissions")
+	permsRoutes.Use(echojwt.WithConfig(configJwt))
+	permsRoutes.Use(nmiddleware.CheckRoleAndPermissions)
+	permsRoutes.GET("", auth_h.GetPermissions)
+
+	/*PERMISSIONS/ROLES ROUTES*/
+
 	e.Logger.Fatal(e.Start(":8080"))
 }

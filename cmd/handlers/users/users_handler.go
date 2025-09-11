@@ -2,6 +2,7 @@ package users
 
 import (
 	"nautic/cmd/repositories"
+
 	"nautic/models"
 	"nautic/validation"
 
