@@ -12,7 +12,9 @@ import (
 
 	"nautic/auth"
 	auth_h "nautic/cmd/handlers/auth"
+	"nautic/cmd/handlers/products"
 	"nautic/cmd/handlers/users"
+
 	nmiddleware "nautic/cmd/middleware"
 	"nautic/cmd/storage"
 	"nautic/validation"
@@ -67,6 +69,15 @@ func main() {
 	permsRoutes.GET("", auth_h.GetPermissions)
 
 	/*PERMISSIONS/ROLES ROUTES*/
+
+	/*ACESSORIES ROUTES*/
+	accRoutes := apiv1.Group("/accessories")
+	accRoutes.Use(echojwt.WithConfig(configJwt))
+	accRoutes.Use(nmiddleware.CheckRoleAndPermissions)
+
+	accRoutes.GET("", products.GetAccessories)
+
+	/*ACESSORIES ROUTES*/
 
 	e.Logger.Fatal(e.Start(":8080"))
 }
