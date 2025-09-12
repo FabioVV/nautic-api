@@ -35,7 +35,7 @@ func main() {
 
 	configJwt := auth.GetJwtConfig()
 
-	//e.Use(middleware.Logger())
+	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
@@ -76,6 +76,11 @@ func main() {
 	accRoutes.Use(nmiddleware.CheckRoleAndPermissions)
 
 	accRoutes.GET("", products.GetAccessories)
+	//I know, i know.... this should problably a separate group, but you know how things are.....
+	accRoutes.GET("/accessories-types", products.GetAccessoriesTypes)
+	accRoutes.POST("/accessories-types", products.InsertAccessoryType)
+	accRoutes.DELETE("/accessories-types/:id", products.DeactivateAccessoryType)
+	accRoutes.PATCH("/accessories-types/:id", products.UpdateAccessoryType)
 
 	/*ACESSORIES ROUTES*/
 

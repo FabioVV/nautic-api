@@ -12,3 +12,19 @@ type Accessory struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
+
+type UpdateAccessoryTypeRequest struct {
+	Type *string `json:"type" validate:"required"`
+}
+
+type CreateAccessoryTypeRequest struct {
+	Type string `json:"type" validate:"required"`
+}
+
+type AccessoryType struct {
+	Id        int64     `json:"id"`
+	Type      string    `json:"type"`
+	Active    string    `json:"active"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
