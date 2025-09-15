@@ -78,6 +78,8 @@ func main() {
 	accRoutes.GET("", products.GetAccessories)
 	accRoutes.POST("", products.InsertAccessory)
 	accRoutes.DELETE("/:id", products.DeactivateAccessory)
+	accRoutes.GET("/:id", products.GetAccessory)
+	accRoutes.PATCH("/:id", products.UpdateAccessory)
 
 	//I know, i know.... this should problably a separate group, but you know how things are.....
 	accRoutes.GET("/accessories-types", products.GetAccessoriesTypes)

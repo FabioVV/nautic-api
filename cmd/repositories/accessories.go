@@ -13,6 +13,71 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+func UpdateAccessory(id int, accT *models.UpdateAccessoryRequest) error {
+	db := storage.GetDB()
+
+	accTg, err := GetAccessory(id)
+	if err != nil {
+		return err
+	}
+
+	if accTg.Active == "N" {
+		return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"errors": echo.Map{"accessory": "Accessory must bet active to update it"}})
+	}
+
+	query := `UPDATE accessories SET `
+	params := []interface{}{}
+	paramCount := 0
+
+	if accT.Model != nil {
+		paramCount++
+		query += fmt.Sprintf("Model = $%d, ", paramCount)
+		params = append(params, *&accT.Model)
+	}
+
+	if accT.PriceBuy != nil {
+		paramCount++
+		query += fmt.Sprintf("price_buy = $%d, ", paramCount)
+		params = append(params, *&accT.PriceBuy)
+	}
+
+	if accT.PriceSell != nil {
+		paramCount++
+		query += fmt.Sprintf("price_sell = $%d, ", paramCount)
+		params = append(params, *&accT.PriceSell)
+	}
+
+	if accT.Details != nil {
+		paramCount++
+		query += fmt.Sprintf("details = $%d, ", paramCount)
+		params = append(params, *&accT.Details)
+	}
+
+	if accT.IdAccessoryType != nil {
+		paramCount++
+		query += fmt.Sprintf("id_accessory_type = $%d, ", paramCount)
+		params = append(params, *&accT.IdAccessoryType)
+	}
+
+	if len(params) == 0 {
+		return nil
+	}
+
+	//Remove the trailing comma and space from the query
+	query = query[:len(query)-2]
+
+	paramCount++
+	query += fmt.Sprintf(" WHERE id = $%d", paramCount)
+	params = append(params, id)
+
+	_, err = db.Exec(query, params...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func UpdateAccessoryType(id int, accT *models.UpdateAccessoryTypeRequest) error {
 	db := storage.GetDB()
 
@@ -112,13 +177,17 @@ func GetAccessory(id int) (models.Accessory, error) {
 	db := storage.GetDB()
 
 	var acc models.Accessory
-	query := `SELECT id, model, details, price_buy, price_sell, active, created_at, updated_at, id_accessory_type FROM accessories WHERE id = $1`
+	query := `SELECT A.id, A.model, A.details, A.price_buy, A.price_sell, A.active, A.created_at, A.updated_at, A.id_accessory_type, AT.type
+	FROM accessories AS A
+	INNER JOIN accessory_types AS AT ON A.id_accessory_type = AT.id
 
-	if err := db.QueryRow(query, id).Scan(&acc.Id, &acc.Model, &acc.Details, &acc.PriceBuy, &acc.PriceSell, &acc.Active, &acc.CreatedAt, &acc.UpdatedAt, &acc.IdAccessoryType); err != nil {
+	WHERE A.id = $1`
+
+	if err := db.QueryRow(query, id).Scan(&acc.Id, &acc.Model, &acc.Details, &acc.PriceBuy, &acc.PriceSell, &acc.Active, &acc.CreatedAt, &acc.UpdatedAt, &acc.IdAccessoryType, &acc.Type); err != nil {
 		if err == sql.ErrNoRows {
 			return acc, echo.NewHTTPError(http.StatusNotFound, "Accessory not found")
 		}
-		return acc, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve accessory")
+		return acc, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve accessory" + err.Error())
 	}
 
 	return acc, nil
@@ -256,7 +325,7 @@ func GetAccessories(pagenum string, limitPerPage string, model string, active st
 	paramCount := 1
 
 	if model != "" {
-		conds = append(conds, fmt.Sprintf("A.name ILIKE $%d", paramCount))
+		conds = append(conds, fmt.Sprintf("A.model ILIKE $%d", paramCount))
 		args = append(args, "%"+model+"%")
 		paramCount++
 	}
@@ -300,7 +369,6 @@ func GetAccessories(pagenum string, limitPerPage string, model string, active st
 	FROM accessories AS A
 	%s
 	`, where)
-	println(queryTotalRecords)
 
 	rowsCount := db.QueryRow(queryTotalRecords, args[:len(args)-2]...) // slice to remove the limit and offset args, they are not needed here
 	numRecords := 0

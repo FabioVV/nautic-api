@@ -13,7 +13,14 @@ type Accessory struct {
 	UpdatedAt time.Time `json:"updated_at"`
 	IdAccessoryType int32  `json:"AccessoryTypeId,omitempty"`
 	Type string  `json:"AccessoryType,omitempty"`
+}
 
+type UpdateAccessoryRequest struct {
+	Model     *string    `json:"model,omitempty" validate:"required"`
+	PriceBuy  *float64   `json:"PriceBuy,omitempty"`
+	PriceSell *float64   `json:"PriceSell,omitempty"`
+	Details   *string    `json:"details,omitempty" validate:"required"`
+	IdAccessoryType *int32  `json:"AccessoryTypeId,omitempty" validate:"required"`
 }
 
 type UpdateAccessoryTypeRequest struct {
