@@ -74,6 +74,24 @@ func DeactivateAccessoryType(id int) error {
 
 }
 
+func DeactivateAccessory(id int) error {
+	db := storage.GetDB()
+
+	_, err := GetAccessory(id)
+	if err != nil {
+		return err
+	}
+
+	query := `UPDATE accessories SET active = 'N' WHERE id = $1`
+
+	_, err = db.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func GetAccessoryType(id int) (models.AccessoryType, error) {
 	db := storage.GetDB()
 
@@ -90,6 +108,22 @@ func GetAccessoryType(id int) (models.AccessoryType, error) {
 	return accT, nil
 }
 
+func GetAccessory(id int) (models.Accessory, error) {
+	db := storage.GetDB()
+
+	var acc models.Accessory
+	query := `SELECT id, model, details, price_buy, price_sell, active, created_at, updated_at, id_accessory_type FROM accessories WHERE id = $1`
+
+	if err := db.QueryRow(query, id).Scan(&acc.Id, &acc.Model, &acc.Details, &acc.PriceBuy, &acc.PriceSell, &acc.Active, &acc.CreatedAt, &acc.UpdatedAt, &acc.IdAccessoryType); err != nil {
+		if err == sql.ErrNoRows {
+			return acc, echo.NewHTTPError(http.StatusNotFound, "Accessory not found")
+		}
+		return acc, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve accessory")
+	}
+
+	return acc, nil
+}
+
 func InsertAccessoryType(accT *models.CreateAccessoryTypeRequest) error {
 	db := storage.GetDB()
 
@@ -99,6 +133,22 @@ func InsertAccessoryType(accT *models.CreateAccessoryTypeRequest) error {
 	if err != nil {
 		if _, ok := utils.CheckForUserError("unique_type", err); ok {
 			return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"errors": echo.Map{"type": "type already exists"}})
+		}
+		return err
+	}
+
+	return nil
+}
+
+func InsertAccessory(acc *models.CreateAccessoryRequest) error {
+	db := storage.GetDB()
+
+	query := "INSERT INTO accessories (model, details, price_buy, price_sell, id_accessory_type) VALUES ($1, $2, $3, $4, $5)"
+
+	_, err := db.Exec(query, acc.Model, acc.Details, acc.PriceBuy, acc.PriceSell, acc.IdAccessoryType)
+	if err != nil {
+		if _, ok := utils.CheckForUserError("unique_type", err); ok {
+			return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"errors": echo.Map{"type": "accessory already exists"}})
 		}
 		return err
 	}
@@ -228,8 +278,9 @@ func GetAccessories(pagenum string, limitPerPage string, model string, active st
 	offsetArgPos := paramCount + 1
 
 	query := fmt.Sprintf(`
-	SELECT A.id, A.model, A.details, A.price_buy, A.price_sell, A.created_at, A.updated_at, A.active
+	SELECT A.id, A.model, A.details, A.price_buy, A.price_sell, A.created_at, A.updated_at, A.active, AT.type
 	FROM accessories AS A
+	INNER JOIN accessory_types AS AT ON A.id_accessory_type = AT.id
 	%s
 	ORDER BY A.id, A.model
 	LIMIT $%d OFFSET $%d
@@ -246,10 +297,10 @@ func GetAccessories(pagenum string, limitPerPage string, model string, active st
 
 	queryTotalRecords := fmt.Sprintf(`
 	SELECT COUNT(1)
-	FROM accesories AS A
+	FROM accessories AS A
 	%s
 	`, where)
-	//println(queryTotalRecords)
+	println(queryTotalRecords)
 
 	rowsCount := db.QueryRow(queryTotalRecords, args[:len(args)-2]...) // slice to remove the limit and offset args, they are not needed here
 	numRecords := 0
@@ -257,7 +308,7 @@ func GetAccessories(pagenum string, limitPerPage string, model string, active st
 
 	for rows.Next() {
 		var curAcc models.Accessory
-		rows.Scan(&curAcc.Id, &curAcc.Model, &curAcc.Details, &curAcc.PriceBuy, &curAcc.PriceSell, &curAcc.CreatedAt, &curAcc.UpdatedAt, &curAcc.Active)
+		rows.Scan(&curAcc.Id, &curAcc.Model, &curAcc.Details, &curAcc.PriceBuy, &curAcc.PriceSell, &curAcc.CreatedAt, &curAcc.UpdatedAt, &curAcc.Active, &curAcc.Type)
 		accs = append(accs, curAcc)
 	}
 

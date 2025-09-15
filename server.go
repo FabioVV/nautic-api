@@ -14,6 +14,7 @@ import (
 	auth_h "nautic/cmd/handlers/auth"
 	"nautic/cmd/handlers/products"
 	"nautic/cmd/handlers/users"
+	"nautic/cmd/handlers/sales"
 
 	nmiddleware "nautic/cmd/middleware"
 	"nautic/cmd/storage"
@@ -42,7 +43,6 @@ func main() {
 		AllowOrigins: []string{"localhost:8080", "http://localhost:4200", "localhost:4200", "http://127.0.0.1:4200"},
 	}))
 
-	e.POST("/tmpr", users.InsertUser)
 	apiv1 := e.Group("/api/v1")
 
 	/*AUTHENTICATION ROUTES*/
@@ -76,13 +76,29 @@ func main() {
 	accRoutes.Use(nmiddleware.CheckRoleAndPermissions)
 
 	accRoutes.GET("", products.GetAccessories)
+	accRoutes.POST("", products.InsertAccessory)
+	accRoutes.DELETE("/:id", products.DeactivateAccessory)
+
 	//I know, i know.... this should problably a separate group, but you know how things are.....
 	accRoutes.GET("/accessories-types", products.GetAccessoriesTypes)
 	accRoutes.POST("/accessories-types", products.InsertAccessoryType)
 	accRoutes.DELETE("/accessories-types/:id", products.DeactivateAccessoryType)
 	accRoutes.PATCH("/accessories-types/:id", products.UpdateAccessoryType)
-
 	/*ACESSORIES ROUTES*/
+
+	/*SALES ROUTES*/
+	salRoutes := apiv1.Group("/sales")
+	salRoutes.Use(echojwt.WithConfig(configJwt))
+	salRoutes.Use(nmiddleware.CheckRoleAndPermissions)
+
+	salRoutes.GET("/communication-means", sales.GetComMeans)
+	salRoutes.POST("/communication-means", sales.InsertComMeans)
+	salRoutes.DELETE("/communication-means/:id", sales.DeactivateComMeans)
+	salRoutes.PATCH("/communication-means/:id", sales.UpdateComMeans)
+
+	/*SALES ROUTES*/
+
+
 
 	e.Logger.Fatal(e.Start(":8080"))
 }

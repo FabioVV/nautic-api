@@ -11,6 +11,9 @@ type Accessory struct {
 	Active    string    `json:"active"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+	IdAccessoryType int32  `json:"AccessoryTypeId,omitempty"`
+	Type string  `json:"AccessoryType,omitempty"`
+
 }
 
 type UpdateAccessoryTypeRequest struct {
@@ -27,4 +30,12 @@ type AccessoryType struct {
 	Active    string    `json:"active"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type CreateAccessoryRequest struct {
+	Model     string    `json:"Model" validate:"required"`
+	PriceBuy  float64   `json:"PriceBuy,omitempty"`
+	PriceSell float64   `json:"PriceSell,omitempty"`
+	Details   string    `json:"Details" validate:"required"`
+	IdAccessoryType int32  `json:"AccessoryTypeId" validate:"required"`
 }
