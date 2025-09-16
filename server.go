@@ -13,8 +13,8 @@ import (
 	"nautic/auth"
 	auth_h "nautic/cmd/handlers/auth"
 	"nautic/cmd/handlers/products"
-	"nautic/cmd/handlers/users"
 	"nautic/cmd/handlers/sales"
+	"nautic/cmd/handlers/users"
 
 	nmiddleware "nautic/cmd/middleware"
 	"nautic/cmd/storage"
@@ -98,9 +98,10 @@ func main() {
 	salRoutes.DELETE("/communication-means/:id", sales.DeactivateComMeans)
 	salRoutes.PATCH("/communication-means/:id", sales.UpdateComMeans)
 
+	salRoutes.GET("/negotiations", sales.GetComMeans)
+	salRoutes.POST("/negotiations", sales.InsertNegotiation)
+
 	/*SALES ROUTES*/
-
-
 
 	e.Logger.Fatal(e.Start(":8080"))
 }

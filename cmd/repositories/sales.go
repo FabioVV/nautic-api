@@ -74,7 +74,6 @@ func DeactivateComMean(id int) error {
 
 }
 
-
 func GetComMean(id int) (models.CommunicationMean, error) {
 	db := storage.GetDB()
 
@@ -107,7 +106,39 @@ func InsertComMeans(mcR *models.CreateCommunicationMeanRequest) error {
 	return nil
 }
 
+func InsertNegotiation(neg *models.CreateNegotiationRequest) error {
+	db := storage.GetDB()
 
+	// 	Name           *string  `json:"Name,omitempty" validate:"required"`
+	// Email          *string  `json:"Email,omitempty" validate:"required"`
+	// Phone          *string  `json:"Phone,omitempty" validate:"required"`
+	// EstimatedValue *float64 `json:"EstimatedValue,omitempty" validate:"required"`
+	// BoatName       *string  `json:"BoatName,omitempty" validate:"required"`
+	// Qualified      *string  `json:"Qualified,omitempty"`
+	// QualifiedType  *string  `json:"QualifiedType,omitempty"`
+
+	query := "INSERT INTO customers (name, email, phone, qualified) VALUES ($1, $2, $3, $4)"
+
+	_, err := db.Exec(query, neg.Name, neg.Email, neg.Phone, neg.Qualified)
+	if err != nil {
+		// if _, ok := utils.CheckForUserError("unique_type", err); ok {
+		// 	return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"errors": echo.Map{"type": "Mean already exists"}})
+		// }
+		return err
+	}
+
+	query = "INSERT INTO so_business (id_customer, boat_name, estimated_value) VALUES ($1, $2, $3)"
+
+	_, err = db.Exec(query, 1, neg.BoatName, neg.EstimatedValue)
+	if err != nil {
+		// if _, ok := utils.CheckForUserError("unique_type", err); ok {
+		// 	return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"errors": echo.Map{"type": "Mean already exists"}})
+		// }
+		return err
+	}
+
+	return nil
+}
 
 func GetComMeans(pagenum string, limitPerPage string, name string, active string) ([]models.CommunicationMean, int, error) {
 	db := storage.GetDB()

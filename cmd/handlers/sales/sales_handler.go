@@ -11,7 +11,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-
 func GetComMeans(c echo.Context) error {
 
 	qpage := c.QueryParams().Get("pageNumber")
@@ -93,5 +92,25 @@ func InsertComMeans(c echo.Context) error {
 
 	return c.JSON(http.StatusCreated, echo.Map{
 		"message": "communication mean created successfully",
+	})
+}
+
+func InsertNegotiation(c echo.Context) error {
+	neg := new(models.CreateNegotiationRequest)
+
+	if err := c.Bind(neg); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request payload")
+	}
+
+	if err := c.Validate(neg); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
+	}
+
+	if err := repositories.InsertNegotiation(neg); err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusCreated, echo.Map{
+		"message": "Negotiation created successfully",
 	})
 }
