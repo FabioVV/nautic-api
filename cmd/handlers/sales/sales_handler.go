@@ -11,6 +11,24 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+func GetNegotiations(c echo.Context) error {
+
+	// qpage := c.QueryParams().Get("pageNumber")
+	// qperpage := c.QueryParams().Get("perPage")
+	qsearch := c.QueryParams().Get("search")
+	//qactive := c.QueryParams().Get("active")
+
+	data, numRecords, err := repositories.GetNegotiations(qsearch)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"data":         data,
+		"totalRecords": numRecords,
+	})
+}
+
 func GetComMeans(c echo.Context) error {
 
 	qpage := c.QueryParams().Get("pageNumber")

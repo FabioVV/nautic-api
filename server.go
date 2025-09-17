@@ -82,10 +82,10 @@ func main() {
 	accRoutes.PATCH("/:id", products.UpdateAccessory)
 
 	//I know, i know.... this should problably a separate group, but you know how things are.....
-	accRoutes.GET("/accessories-types", products.GetAccessoriesTypes)
-	accRoutes.POST("/accessories-types", products.InsertAccessoryType)
-	accRoutes.DELETE("/accessories-types/:id", products.DeactivateAccessoryType)
-	accRoutes.PATCH("/accessories-types/:id", products.UpdateAccessoryType)
+	accRoutes.GET("/types", products.GetAccessoriesTypes)
+	accRoutes.POST("/types", products.InsertAccessoryType)
+	accRoutes.DELETE("/types/:id", products.DeactivateAccessoryType)
+	accRoutes.PATCH("/types/:id", products.UpdateAccessoryType)
 	/*ACESSORIES ROUTES*/
 
 	/*SALES ROUTES*/
@@ -98,7 +98,7 @@ func main() {
 	salRoutes.DELETE("/communication-means/:id", sales.DeactivateComMeans)
 	salRoutes.PATCH("/communication-means/:id", sales.UpdateComMeans)
 
-	salRoutes.GET("/negotiations", sales.GetComMeans)
+	salRoutes.GET("/negotiations", sales.GetNegotiations)
 	salRoutes.POST("/negotiations", sales.InsertNegotiation)
 
 	/*SALES ROUTES*/

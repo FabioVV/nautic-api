@@ -80,7 +80,7 @@ func DeactivateAccessoryType(c echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, echo.Map{
+	return c.JSON(http.StatusNoContent, echo.Map{
 		"message": "type deactivated successfully",
 	})
 }
@@ -118,7 +118,7 @@ func DeactivateAccessory(c echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, echo.Map{
+	return c.JSON(http.StatusNoContent, echo.Map{
 		"message": "accessory deactivated successfully",
 	})
 }
@@ -127,7 +127,7 @@ func InsertAccessory(c echo.Context) error {
 	accT := new(models.CreateAccessoryRequest)
 
 	if err := c.Bind(accT); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request payload" + err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request payload"+err.Error())
 	}
 
 	if err := c.Validate(accT); err != nil {
@@ -142,7 +142,6 @@ func InsertAccessory(c echo.Context) error {
 		"message": "accessory type created successfully",
 	})
 }
-
 
 func GetAccessories(c echo.Context) error {
 	qpage := c.QueryParams().Get("pageNumber")

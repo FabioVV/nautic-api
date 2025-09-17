@@ -166,7 +166,7 @@ func GetUsers(pagenum string, limitPerPage string, name string, email string, ac
 	`, where)
 	//println(queryTotalRecords)
 
-	rowsCount := db.QueryRow(queryTotalRecords, args[:len(args)-2]...)// slice to remove the limit and offset args, they are not needed here
+	rowsCount := db.QueryRow(queryTotalRecords, args[:len(args)-2]...) // slice to remove the limit and offset args, they are not needed here
 	numRecords := 0
 	rowsCount.Scan(&numRecords)
 
@@ -174,6 +174,10 @@ func GetUsers(pagenum string, limitPerPage string, name string, email string, ac
 		var curUser models.User
 		rows.Scan(&curUser.Id, &curUser.Name, &curUser.Email, &curUser.Active, &curUser.CreatedAt, &curUser.UpdatedAt)
 		users = append(users, curUser)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("rows error: %w", err)
 	}
 
 	return users, numRecords, nil

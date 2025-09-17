@@ -2,24 +2,47 @@ package models
 
 import "time"
 
-// {
-//     "Name": "assasda",
-//     "Email": "sadsdasdasda",
-//     "Phone": "12-31231-2313",
-//     "EstimatedValue": 11111.02,
-//     "Qualified": "N",
-//     "QualifiedType": "",
-//     "BoatName": "asdsaddasdsadsa",
-//     "ComMeanName": "Facebook #updated",
-//     "ComMeanId": 2
-// }
+// SELECT id,
+// 		id_customer,
+//  		id_mean_communication,
+// 		num_bussiness_customer,
+// 		boat_name,
+// 		estimated_value,
+// 		max_estimated_value,
+// 		customer_city,
+// 		customer_navigation_city,
+// 		boat_capacity_needed,
+// 		new_used,
+// 		cab_open,
+// 		stage,
+// 		qualified
+
+type Negotiation struct {
+	Id                 int64    `json:"id"`
+	CustomerId         int32    `json:"id_customer"`
+	MeanComId          int32    `json:"id_mean_communication"`
+	Name               string   `json:"customer_name"`
+	Email              string   `json:"customer_email"`
+	Phone              string   `json:"customer_phone"`
+	MeamComName        string   `json:"com_name"`
+	BoatName           string   `json:"boat_name"`
+	EstimatedValue     float64  `json:"estimated_value"`
+	MaxEstimatedValue  *float64 `json:"max_estimated_value"`
+	City               *string  `json:"customer_city"`
+	NavigationCity     *string  `json:"customer_nav_city"`
+	BoatCapacityNeeded *int32   `json:"boat_cap_needed"`
+	NewUsed            *string  `json:"new_used"`
+	CabOpen            *string  `json:"cab_open"`
+	Stage              int64    `json:"stage"`
+	Qualified          string   `json:"qualified"`
+}
 
 type CreateNegotiationRequest struct {
-	Name           *string  `json:"Name,omitempty" validate:"required"`
-	Email          *string  `json:"Email,omitempty" validate:"required"`
-	Phone          *string  `json:"Phone,omitempty" validate:"required"`
-	EstimatedValue *float64 `json:"EstimatedValue,omitempty" validate:"required"`
-	BoatName       *string  `json:"BoatName,omitempty" validate:"required"`
+	Name           *string  `json:"Name" validate:"required"`
+	Email          *string  `json:"Email" validate:"required"`
+	Phone          *string  `json:"Phone" validate:"required"`
+	EstimatedValue *float64 `json:"EstimatedValue" validate:"required"`
+	BoatName       *string  `json:"BoatName" validate:"required"`
 	Qualified      *string  `json:"Qualified,omitempty"`
 	QualifiedType  *string  `json:"QualifiedType,omitempty"`
 }

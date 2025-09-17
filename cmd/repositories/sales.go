@@ -109,14 +109,6 @@ func InsertComMeans(mcR *models.CreateCommunicationMeanRequest) error {
 func InsertNegotiation(neg *models.CreateNegotiationRequest) error {
 	db := storage.GetDB()
 
-	// 	Name           *string  `json:"Name,omitempty" validate:"required"`
-	// Email          *string  `json:"Email,omitempty" validate:"required"`
-	// Phone          *string  `json:"Phone,omitempty" validate:"required"`
-	// EstimatedValue *float64 `json:"EstimatedValue,omitempty" validate:"required"`
-	// BoatName       *string  `json:"BoatName,omitempty" validate:"required"`
-	// Qualified      *string  `json:"Qualified,omitempty"`
-	// QualifiedType  *string  `json:"QualifiedType,omitempty"`
-
 	query := "INSERT INTO customers (name, email, phone, qualified) VALUES ($1, $2, $3, $4)"
 
 	_, err := db.Exec(query, neg.Name, neg.Email, neg.Phone, neg.Qualified)
@@ -127,9 +119,9 @@ func InsertNegotiation(neg *models.CreateNegotiationRequest) error {
 		return err
 	}
 
-	query = "INSERT INTO so_business (id_customer, boat_name, estimated_value) VALUES ($1, $2, $3)"
+	query = "INSERT INTO so_business (id_customer, boat_name, estimated_value, qualified) VALUES ($1, $2, $3, $4)"
 
-	_, err = db.Exec(query, 1, neg.BoatName, neg.EstimatedValue)
+	_, err = db.Exec(query, 1, neg.BoatName, neg.EstimatedValue, neg.Qualified)
 	if err != nil {
 		// if _, ok := utils.CheckForUserError("unique_type", err); ok {
 		// 	return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"errors": echo.Map{"type": "Mean already exists"}})
@@ -216,5 +208,96 @@ func GetComMeans(pagenum string, limitPerPage string, name string, active string
 		accs = append(accs, curAcc)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("rows error: %w", err)
+	}
+
 	return accs, numRecords, nil
+}
+
+func GetNegotiations(search string) ([]models.Negotiation, int, error) {
+	db := storage.GetDB()
+
+	var negs []models.Negotiation
+
+	conds := []string{}
+	args := []interface{}{}
+	paramCount := 1
+
+	if search != "" {
+		conds = append(conds, fmt.Sprintf("SB.boat_name ILIKE $%d OR C.name ILIKE $%d", paramCount, paramCount))
+		args = append(args, "%"+search+"%")
+		paramCount++
+	}
+
+	where := ""
+	if len(conds) > 0 {
+		where = "WHERE " + strings.Join(conds, " AND ")
+	}
+
+	query := fmt.Sprintf(`
+	SELECT SB.id, 
+			SB.id_customer,
+	 		SB.id_mean_communication, 
+			C.name,
+			C.email,
+			C.phone,
+			MC.name,
+			SB.boat_name, 
+			SB.estimated_value, 
+			SB.max_estimated_value, 
+			SB.customer_city, 
+			SB.customer_navigation_city, 
+			SB.boat_capacity_needed, 
+			SB.new_used, 
+			SB.cab_open, 
+			SB.stage, 
+			SB.qualified
+	FROM so_business AS SB
+
+	INNER JOIN customers AS C ON SB.id_customer = C.id
+	INNER JOIN mean_communication AS MC ON SB.id_mean_communication = MC.id
+
+	%s
+	ORDER BY SB.id
+	`, where)
+
+	rows, err := db.Query(query, args...)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return negs, 0, echo.NewHTTPError(http.StatusNotFound, "Types not found")
+		}
+		return negs, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve negotiations")
+	}
+
+	queryTotalRecords := fmt.Sprintf(`
+	SELECT COUNT(1)
+	FROM so_business AS SB
+	INNER JOIN customers AS C ON SB.id_customer = C.id
+	INNER JOIN mean_communication AS MC ON SB.id_mean_communication = MC.id
+	%s
+	`, where)
+	//println(queryTotalRecords)
+
+	rowsCount := db.QueryRow(queryTotalRecords, args...)
+	numRecords := 0
+	rowsCount.Scan(&numRecords)
+
+	for rows.Next() {
+		var curNeg models.Negotiation
+		if err := rows.Scan(&curNeg.Id, &curNeg.CustomerId, &curNeg.MeanComId,
+			&curNeg.Name, &curNeg.Email, &curNeg.Phone, &curNeg.MeamComName,
+			&curNeg.BoatName, &curNeg.EstimatedValue, &curNeg.MaxEstimatedValue, &curNeg.City,
+			&curNeg.NavigationCity, &curNeg.BoatCapacityNeeded, &curNeg.NewUsed, &curNeg.CabOpen, &curNeg.Stage, &curNeg.Qualified); err != nil {
+			return nil, 0, fmt.Errorf("scan error: %w", err)
+		}
+		negs = append(negs, curNeg)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("rows error: %w", err)
+	}
+
+	return negs, numRecords, nil
 }

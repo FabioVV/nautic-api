@@ -187,7 +187,7 @@ func GetAccessory(id int) (models.Accessory, error) {
 		if err == sql.ErrNoRows {
 			return acc, echo.NewHTTPError(http.StatusNotFound, "Accessory not found")
 		}
-		return acc, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve accessory" + err.Error())
+		return acc, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve accessory"+err.Error())
 	}
 
 	return acc, nil
@@ -301,6 +301,10 @@ func GetAccessoriesTypes(pagenum string, limitPerPage string, _type string, acti
 		accs = append(accs, curAcc)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("rows error: %w", err)
+	}
+
 	return accs, numRecords, nil
 }
 
@@ -378,6 +382,10 @@ func GetAccessories(pagenum string, limitPerPage string, model string, active st
 		var curAcc models.Accessory
 		rows.Scan(&curAcc.Id, &curAcc.Model, &curAcc.Details, &curAcc.PriceBuy, &curAcc.PriceSell, &curAcc.CreatedAt, &curAcc.UpdatedAt, &curAcc.Active, &curAcc.Type)
 		accs = append(accs, curAcc)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("rows error: %w", err)
 	}
 
 	return accs, numRecords, nil
