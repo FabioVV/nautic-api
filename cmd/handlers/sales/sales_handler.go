@@ -29,6 +29,25 @@ func GetNegotiations(c echo.Context) error {
 	})
 }
 
+func GetCustomers(c echo.Context) error {
+
+	qpage := c.QueryParams().Get("pageNumber")
+	qperpage := c.QueryParams().Get("perPage")
+	qname := c.QueryParams().Get("name")
+	qemail := c.QueryParams().Get("email")
+	qphone := c.QueryParams().Get("phone")
+
+	data, numRecords, err := repositories.GetCustomers(qpage, qperpage, qname, qemail, qphone)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"data":         data,
+		"totalRecords": numRecords,
+	})
+}
+
 func GetComMeans(c echo.Context) error {
 
 	qpage := c.QueryParams().Get("pageNumber")

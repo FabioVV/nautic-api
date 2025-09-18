@@ -101,6 +101,8 @@ func main() {
 	salRoutes.GET("/negotiations", sales.GetNegotiations)
 	salRoutes.POST("/negotiations", sales.InsertNegotiation)
 
+	salRoutes.GET("/customers", sales.GetCustomers)
+
 	/*SALES ROUTES*/
 
 	e.Logger.Fatal(e.Start(":8080"))

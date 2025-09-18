@@ -74,10 +74,10 @@ func Login(c echo.Context) error {
 	}
 
 	claims := &auth.JwtCustomClaims{
-		name,
-		userRoles,
-		userPermissions,
-		jwt.RegisteredClaims{
+		Name:        name,
+		Roles:       userRoles,
+		Permissions: userPermissions,
+		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 72)),
 		},
 	}
@@ -93,6 +93,7 @@ func Login(c echo.Context) error {
 		"token": t,
 		"name":  name,
 		"email": email,
+		"id":    id,
 	})
 
 }

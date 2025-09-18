@@ -109,9 +109,10 @@ func InsertComMeans(mcR *models.CreateCommunicationMeanRequest) error {
 func InsertNegotiation(neg *models.CreateNegotiationRequest) error {
 	db := storage.GetDB()
 
-	query := "INSERT INTO customers (name, email, phone, qualified) VALUES ($1, $2, $3, $4)"
+	query := "INSERT INTO customers (id_user, id_mean_communication, name, email, phone, qualified, qualified_type) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id"
 
-	_, err := db.Exec(query, neg.Name, neg.Email, neg.Phone, neg.Qualified)
+	var customerID int
+	err := db.QueryRow(query, neg.UserId, neg.ComMeanId, neg.Name, neg.Email, neg.Phone, neg.Qualified, neg.QualifiedType).Scan(&customerID)
 	if err != nil {
 		// if _, ok := utils.CheckForUserError("unique_type", err); ok {
 		// 	return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"errors": echo.Map{"type": "Mean already exists"}})
@@ -119,9 +120,9 @@ func InsertNegotiation(neg *models.CreateNegotiationRequest) error {
 		return err
 	}
 
-	query = "INSERT INTO so_business (id_customer, boat_name, estimated_value, qualified) VALUES ($1, $2, $3, $4)"
+	query = "INSERT INTO so_business (id_customer, id_mean_communication, boat_name, estimated_value, qualified, qualified_type) VALUES ($1, $2, $3, $4, $5, $6)"
 
-	_, err = db.Exec(query, 1, neg.BoatName, neg.EstimatedValue, neg.Qualified)
+	_, err = db.Exec(query, customerID, neg.ComMeanId, neg.BoatName, neg.EstimatedValue, neg.Qualified, neg.QualifiedType)
 	if err != nil {
 		// if _, ok := utils.CheckForUserError("unique_type", err); ok {
 		// 	return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"errors": echo.Map{"type": "Mean already exists"}})
@@ -130,6 +131,102 @@ func InsertNegotiation(neg *models.CreateNegotiationRequest) error {
 	}
 
 	return nil
+}
+
+func GetCustomers(pagenum string, limitPerPage string, name string, email string, phone string) ([]models.Customer, int, error) {
+	db := storage.GetDB()
+
+	pagenumber, err := strconv.Atoi(pagenum)
+	if err != nil {
+		return nil, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve customers (PG1)")
+	}
+	limit, err := strconv.Atoi(limitPerPage)
+	if err != nil {
+		return nil, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve customers (PG2)")
+	}
+
+	offset := (pagenumber - 1) * limit
+
+	var custs []models.Customer
+
+	conds := []string{}
+	args := []interface{}{}
+	paramCount := 1
+
+	if name != "" {
+		conds = append(conds, fmt.Sprintf("C.name ILIKE $%d", paramCount))
+		args = append(args, "%"+name+"%")
+		paramCount++
+	}
+
+	if email != "" {
+		conds = append(conds, fmt.Sprintf("C.email ILIKE $%d", paramCount))
+		args = append(args, "%"+email+"%")
+		paramCount++
+	}
+
+	if phone != "" {
+		conds = append(conds, fmt.Sprintf("C.phone ILIKE $%d", paramCount))
+		args = append(args, "%"+phone+"%")
+		paramCount++
+	}
+
+	where := ""
+	if len(conds) > 0 {
+		where = "WHERE " + strings.Join(conds, " AND ")
+	}
+
+	//append pagination range
+	args = append(args, limitPerPage, offset)
+	limitArgPos := paramCount
+	offsetArgPos := paramCount + 1
+
+	query := fmt.Sprintf(`
+	SELECT C.id, C.id_user, C.id_mean_communication, U.name AS seller_name, MC.name,
+	C.name, C.email, C.phone, C.birthdate, C.pf_pj, 
+	C.cpf, C.cnpj, C.cep, C.street, C.neighborhood,
+	C.city, C.complement, C.qualified, C.active, C.active_contact
+
+	FROM customers AS C
+	INNER JOIN users AS U ON C.id_user = U.id
+	INNER JOIN mean_communication AS MC ON C.id_mean_communication = MC.id
+	%s
+	ORDER BY C.id, C.name
+	LIMIT $%d OFFSET $%d
+	`, where, limitArgPos, offsetArgPos)
+
+	rows, err := db.Query(query, args...)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return custs, 0, echo.NewHTTPError(http.StatusNotFound, "Types not found")
+		}
+		return custs, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve accs"+err.Error())
+	}
+
+	queryTotalRecords := fmt.Sprintf(`
+	SELECT COUNT(1)
+	FROM customers AS C
+	INNER JOIN users AS U ON C.id_user = U.id
+	INNER JOIN mean_communication AS MC ON C.id_mean_communication = MC.id
+	%s
+	`, where)
+
+	rowsCount := db.QueryRow(queryTotalRecords, args[:len(args)-2]...) // slice to remove the limit and offset args, they are not needed here
+	numRecords := 0
+	rowsCount.Scan(&numRecords)
+
+	for rows.Next() {
+		var curC models.Customer
+		rows.Scan(&curC.Id, &curC.UserId, &curC.MeanComId, &curC.SellerName, &curC.MeamComName, &curC.Name, &curC.Email, &curC.Phone, &curC.BirthDate, &curC.PfPj, &curC.Cpf, &curC.Cnpj, &curC.Cep, &curC.Street, &curC.Neighborhood, &curC.City, &curC.Complement, &curC.Qualified, &curC.Active, &curC.ActiveContact)
+		custs = append(custs, curC)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("rows error: %w", err)
+	}
+
+	return custs, numRecords, nil
 }
 
 func GetComMeans(pagenum string, limitPerPage string, name string, active string) ([]models.CommunicationMean, int, error) {
@@ -252,7 +349,7 @@ func GetNegotiations(search string) ([]models.Negotiation, int, error) {
 			SB.new_used, 
 			SB.cab_open, 
 			SB.stage, 
-			SB.qualified
+			C.qualified
 	FROM so_business AS SB
 
 	INNER JOIN customers AS C ON SB.id_customer = C.id
@@ -266,9 +363,9 @@ func GetNegotiations(search string) ([]models.Negotiation, int, error) {
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return negs, 0, echo.NewHTTPError(http.StatusNotFound, "Types not found")
+			return negs, 0, echo.NewHTTPError(http.StatusNotFound, "Negotiations not found")
 		}
-		return negs, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve negotiations")
+		return negs, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve negotiations"+err.Error())
 	}
 
 	queryTotalRecords := fmt.Sprintf(`
@@ -286,12 +383,14 @@ func GetNegotiations(search string) ([]models.Negotiation, int, error) {
 
 	for rows.Next() {
 		var curNeg models.Negotiation
+
 		if err := rows.Scan(&curNeg.Id, &curNeg.CustomerId, &curNeg.MeanComId,
 			&curNeg.Name, &curNeg.Email, &curNeg.Phone, &curNeg.MeamComName,
 			&curNeg.BoatName, &curNeg.EstimatedValue, &curNeg.MaxEstimatedValue, &curNeg.City,
 			&curNeg.NavigationCity, &curNeg.BoatCapacityNeeded, &curNeg.NewUsed, &curNeg.CabOpen, &curNeg.Stage, &curNeg.Qualified); err != nil {
 			return nil, 0, fmt.Errorf("scan error: %w", err)
 		}
+
 		negs = append(negs, curNeg)
 	}
 

@@ -2,24 +2,32 @@ package models
 
 import "time"
 
-// SELECT id,
-// 		id_customer,
-//  		id_mean_communication,
-// 		num_bussiness_customer,
-// 		boat_name,
-// 		estimated_value,
-// 		max_estimated_value,
-// 		customer_city,
-// 		customer_navigation_city,
-// 		boat_capacity_needed,
-// 		new_used,
-// 		cab_open,
-// 		stage,
-// 		qualified
+type Customer struct {
+	Id            int64   `json:"id"`
+	UserId        int64   `json:"id_user"`
+	MeanComId     int32   `json:"id_mean_communication"`
+	SellerName    string  `json:"seller_name"`
+	MeamComName   string  `json:"com_name"`
+	Name          string  `json:"customer_name"`
+	Email         *string `json:"customer_email"`
+	Phone         *string `json:"customer_phone"`
+	BirthDate     *string `json:"birthdate"`
+	PfPj          *string `json:"pf_pj"`
+	Cpf           *string `json:"cpf"`
+	Cnpj          *string `json:"cnpj"`
+	Cep           *string `json:"cep"`
+	Street        *string `json:"street"`
+	Neighborhood  *string `json:"neighborhood"`
+	City          *string `json:"city"`
+	Complement    *string `json:"complement"`
+	Qualified     *string `json:"qualified"`
+	Active        *string `json:"active"`
+	ActiveContact *string `json:"active_contact"`
+}
 
 type Negotiation struct {
 	Id                 int64    `json:"id"`
-	CustomerId         int32    `json:"id_customer"`
+	CustomerId         int64    `json:"id_customer"`
 	MeanComId          int32    `json:"id_mean_communication"`
 	Name               string   `json:"customer_name"`
 	Email              string   `json:"customer_email"`
@@ -45,6 +53,8 @@ type CreateNegotiationRequest struct {
 	BoatName       *string  `json:"BoatName" validate:"required"`
 	Qualified      *string  `json:"Qualified,omitempty"`
 	QualifiedType  *string  `json:"QualifiedType,omitempty"`
+	ComMeanId      *int32   `json:"ComMeanId"`
+	UserId         *int64   `json:"UserId" validate:"required"`
 }
 
 type CreateCommunicationMeanRequest struct {
