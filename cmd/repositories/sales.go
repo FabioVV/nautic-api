@@ -133,6 +133,74 @@ func InsertNegotiation(neg *models.CreateNegotiationRequest) error {
 	return nil
 }
 
+func GetCustomersBirthday() ([]models.Customer, int, error) {
+	db := storage.GetDB()
+	var custs []models.Customer
+
+	query := fmt.Sprintf(`
+	SELECT C.id, C.id_user, C.id_mean_communication, U.name AS seller_name, MC.name,
+	C.name, C.email, C.phone, C.birthdate, C.pf_pj, 
+	C.cpf, C.cnpj, C.cep, C.street, C.neighborhood,
+	C.city, C.complement, C.qualified, C.active, C.active_contact
+
+	FROM customers AS C
+	INNER JOIN users AS U ON C.id_user = U.id
+	INNER JOIN mean_communication AS MC ON C.id_mean_communication = MC.id
+
+	WHERE C.birthdate IS NOT NULL AND
+	(EXTRACT(MONTH FROM C.birthdate) = EXTRACT(MONTH FROM CURRENT_DATE) 
+    AND EXTRACT(DAY FROM C.birthdate) >= EXTRACT(DAY FROM CURRENT_DATE)
+    AND EXTRACT(DAY FROM C.birthdate) <= EXTRACT(DAY FROM CURRENT_DATE + INTERVAL '1 month'))
+    	OR
+    (EXTRACT(MONTH FROM C.birthdate) = EXTRACT(MONTH FROM CURRENT_DATE + INTERVAL '1 month')
+    AND EXTRACT(DAY FROM C.birthdate) <= EXTRACT(DAY FROM CURRENT_DATE + INTERVAL '1 month'))
+
+	ORDER BY EXTRACT(MONTH FROM C.birthdate), EXTRACT(DAY FROM C.birthdate), C.name
+	`)
+
+	rows, err := db.Query(query)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return custs, 0, echo.NewHTTPError(http.StatusNotFound, "Types not found")
+		}
+		return custs, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve accs"+err.Error())
+	}
+
+	queryTotalRecords := fmt.Sprintf(`
+	SELECT COUNT(1)
+	FROM customers AS C
+	INNER JOIN users AS U ON C.id_user = U.id
+	INNER JOIN mean_communication AS MC ON C.id_mean_communication = MC.id
+
+	WHERE C.birthdate IS NOT NULL AND
+	(EXTRACT(MONTH FROM C.birthdate) = EXTRACT(MONTH FROM CURRENT_DATE) 
+    AND EXTRACT(DAY FROM C.birthdate) >= EXTRACT(DAY FROM CURRENT_DATE)
+    AND EXTRACT(DAY FROM C.birthdate) <= EXTRACT(DAY FROM CURRENT_DATE + INTERVAL '1 month'))
+    	OR
+    (EXTRACT(MONTH FROM C.birthdate) = EXTRACT(MONTH FROM CURRENT_DATE + INTERVAL '1 month')
+    AND EXTRACT(DAY FROM C.birthdate) <= EXTRACT(DAY FROM CURRENT_DATE + INTERVAL '1 month'))
+
+	ORDER BY EXTRACT(MONTH FROM C.birthdate), EXTRACT(DAY FROM C.birthdate), C.name
+	`)
+
+	rowsCount := db.QueryRow(queryTotalRecords)
+	numRecords := 0
+	rowsCount.Scan(&numRecords)
+
+	for rows.Next() {
+		var curC models.Customer
+		rows.Scan(&curC.Id, &curC.UserId, &curC.MeanComId, &curC.SellerName, &curC.MeamComName, &curC.Name, &curC.Email, &curC.Phone, &curC.BirthDate, &curC.PfPj, &curC.Cpf, &curC.Cnpj, &curC.Cep, &curC.Street, &curC.Neighborhood, &curC.City, &curC.Complement, &curC.Qualified, &curC.Active, &curC.ActiveContact)
+		custs = append(custs, curC)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("rows error: %w", err)
+	}
+
+	return custs, numRecords, nil
+}
+
 func GetCustomers(pagenum string, limitPerPage string, name string, email string, phone string) ([]models.Customer, int, error) {
 	db := storage.GetDB()
 

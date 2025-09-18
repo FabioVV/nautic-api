@@ -102,6 +102,7 @@ func main() {
 	salRoutes.POST("/negotiations", sales.InsertNegotiation)
 
 	salRoutes.GET("/customers", sales.GetCustomers)
+	salRoutes.GET("/customers-birthday", sales.GetCustomersBirthday)
 
 	/*SALES ROUTES*/
 

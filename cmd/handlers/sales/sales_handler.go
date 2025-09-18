@@ -29,6 +29,18 @@ func GetNegotiations(c echo.Context) error {
 	})
 }
 
+func GetCustomersBirthday(c echo.Context) error {
+	data, numRecords, err := repositories.GetCustomersBirthday()
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"data":         data,
+		"totalRecords": numRecords,
+	})
+}
+
 func GetCustomers(c echo.Context) error {
 
 	qpage := c.QueryParams().Get("pageNumber")
