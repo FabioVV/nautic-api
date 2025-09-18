@@ -109,10 +109,10 @@ func InsertComMeans(mcR *models.CreateCommunicationMeanRequest) error {
 func InsertNegotiation(neg *models.CreateNegotiationRequest) error {
 	db := storage.GetDB()
 
-	query := "INSERT INTO customers (id_user, id_mean_communication, name, email, phone, qualified, qualified_type) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id"
+	query := "INSERT INTO customers (id_user, id_mean_communication, name, email, phone, qualified, qualified_type, boat_alert) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id"
 
 	var customerID int
-	err := db.QueryRow(query, neg.UserId, neg.ComMeanId, neg.Name, neg.Email, neg.Phone, neg.Qualified, neg.QualifiedType).Scan(&customerID)
+	err := db.QueryRow(query, neg.UserId, neg.ComMeanId, neg.Name, neg.Email, neg.Phone, neg.Qualified, neg.QualifiedType, neg.BoatName).Scan(&customerID)
 	if err != nil {
 		// if _, ok := utils.CheckForError("unique_type", err); ok {
 		// 	return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"errors": echo.Map{"type": "Mean already exists"}})
@@ -201,7 +201,7 @@ func GetCustomersBirthday() ([]models.Customer, int, error) {
 	return custs, numRecords, nil
 }
 
-func GetCustomers(pagenum string, limitPerPage string, name string, email string, phone string) ([]models.Customer, int, error) {
+func GetCustomers(pagenum string, limitPerPage string, name string, email string, phone string, boat string) ([]models.Customer, int, error) {
 	db := storage.GetDB()
 
 	pagenumber, err := strconv.Atoi(pagenum)
@@ -236,6 +236,12 @@ func GetCustomers(pagenum string, limitPerPage string, name string, email string
 	if phone != "" {
 		conds = append(conds, fmt.Sprintf("C.phone ILIKE $%d", paramCount))
 		args = append(args, "%"+phone+"%")
+		paramCount++
+	}
+
+	if boat != "" {
+		conds = append(conds, fmt.Sprintf("C.boat_alert ILIKE $%d", paramCount))
+		args = append(args, "%"+boat+"%")
 		paramCount++
 	}
 

@@ -59,8 +59,9 @@ func GetCustomers(c echo.Context) error {
 	qname := c.QueryParams().Get("name")
 	qemail := c.QueryParams().Get("email")
 	qphone := c.QueryParams().Get("phone")
+	qpboat := c.QueryParams().Get("boat")
 
-	data, numRecords, err := repositories.GetCustomers(qpage, qperpage, qname, qemail, qphone)
+	data, numRecords, err := repositories.GetCustomers(qpage, qperpage, qname, qemail, qphone, qpboat)
 	if err != nil {
 		return err
 	}
