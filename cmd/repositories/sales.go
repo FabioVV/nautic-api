@@ -380,7 +380,7 @@ func GetComMeans(pagenum string, limitPerPage string, name string, active string
 	return accs, numRecords, nil
 }
 
-func GetNegotiations(search string) ([]models.Negotiation, int, error) {
+func GetNegotiations(search string, userId int) ([]models.Negotiation, int, error) {
 	db := storage.GetDB()
 
 	var negs []models.Negotiation
@@ -394,6 +394,10 @@ func GetNegotiations(search string) ([]models.Negotiation, int, error) {
 		args = append(args, "%"+search+"%")
 		paramCount++
 	}
+
+	conds = append(conds, fmt.Sprintf("C.id_user = $%d", paramCount))
+	args = append(args, userId)
+	paramCount++
 
 	where := ""
 	if len(conds) > 0 {

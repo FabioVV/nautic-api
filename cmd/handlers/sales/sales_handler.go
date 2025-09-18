@@ -1,6 +1,7 @@
 package sales
 
 import (
+	"nautic/auth"
 	"nautic/cmd/repositories"
 	"nautic/models"
 	"nautic/validation"
@@ -8,17 +9,27 @@ import (
 
 	"net/http"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
 
 func GetNegotiations(c echo.Context) error {
+
+	user, ok := c.Get("user").(*jwt.Token)
+	if !ok {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to parse user credentials"})
+	}
+	claims, ok := user.Claims.(*auth.JwtCustomClaims)
+	if !ok {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to parse user credentials claims"})
+	}
 
 	// qpage := c.QueryParams().Get("pageNumber")
 	// qperpage := c.QueryParams().Get("perPage")
 	qsearch := c.QueryParams().Get("search")
 	//qactive := c.QueryParams().Get("active")
 
-	data, numRecords, err := repositories.GetNegotiations(qsearch)
+	data, numRecords, err := repositories.GetNegotiations(qsearch, claims.Id)
 	if err != nil {
 		return err
 	}

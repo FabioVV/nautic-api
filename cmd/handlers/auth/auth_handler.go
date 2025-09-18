@@ -74,6 +74,7 @@ func Login(c echo.Context) error {
 	}
 
 	claims := &auth.JwtCustomClaims{
+		Id:          id,
 		Name:        name,
 		Roles:       userRoles,
 		Permissions: userPermissions,

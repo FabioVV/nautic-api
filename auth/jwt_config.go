@@ -1,13 +1,15 @@
 package auth
 
 import (
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/labstack/echo-jwt/v4"
-	"github.com/labstack/echo/v4"
 	"os"
+
+	"github.com/golang-jwt/jwt/v5"
+	echojwt "github.com/labstack/echo-jwt/v4"
+	"github.com/labstack/echo/v4"
 )
 
 type JwtCustomClaims struct {
+	Id          int      `json:"id"`
 	Name        string   `json:"name"`
 	Roles       []string `json:"roles"`
 	Permissions []string `json:"permissions"`
