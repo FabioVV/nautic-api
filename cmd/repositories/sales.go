@@ -97,7 +97,7 @@ func InsertComMeans(mcR *models.CreateCommunicationMeanRequest) error {
 
 	_, err := db.Exec(query, mcR.Name)
 	if err != nil {
-		if _, ok := utils.CheckForUserError("unique_type", err); ok {
+		if _, ok := utils.CheckForError("unique_type", err); ok {
 			return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"errors": echo.Map{"type": "Mean already exists"}})
 		}
 		return err
@@ -114,7 +114,7 @@ func InsertNegotiation(neg *models.CreateNegotiationRequest) error {
 	var customerID int
 	err := db.QueryRow(query, neg.UserId, neg.ComMeanId, neg.Name, neg.Email, neg.Phone, neg.Qualified, neg.QualifiedType).Scan(&customerID)
 	if err != nil {
-		// if _, ok := utils.CheckForUserError("unique_type", err); ok {
+		// if _, ok := utils.CheckForError("unique_type", err); ok {
 		// 	return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"errors": echo.Map{"type": "Mean already exists"}})
 		// }
 		return err
@@ -124,7 +124,7 @@ func InsertNegotiation(neg *models.CreateNegotiationRequest) error {
 
 	_, err = db.Exec(query, customerID, neg.ComMeanId, neg.BoatName, neg.EstimatedValue, neg.Qualified, neg.QualifiedType)
 	if err != nil {
-		// if _, ok := utils.CheckForUserError("unique_type", err); ok {
+		// if _, ok := utils.CheckForError("unique_type", err); ok {
 		// 	return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"errors": echo.Map{"type": "Mean already exists"}})
 		// }
 		return err

@@ -123,6 +123,26 @@ func DeactivateAccessory(c echo.Context) error {
 	})
 }
 
+func InsertBoat(c echo.Context) error {
+	boat := new(models.CreateBoatRequest)
+
+	if err := c.Bind(boat); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request payload"+err.Error())
+	}
+
+	if err := c.Validate(boat); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
+	}
+
+	if err := repositories.InsertBoat(boat); err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusCreated, echo.Map{
+		"message": "boat type created successfully",
+	})
+}
+
 func InsertAccessory(c echo.Context) error {
 	accT := new(models.CreateAccessoryRequest)
 
@@ -140,6 +160,25 @@ func InsertAccessory(c echo.Context) error {
 
 	return c.JSON(http.StatusCreated, echo.Map{
 		"message": "accessory type created successfully",
+	})
+}
+
+func GetBoats(c echo.Context) error {
+	qpage := c.QueryParams().Get("pageNumber")
+	qperpage := c.QueryParams().Get("perPage")
+	qmodel := c.QueryParams().Get("model")
+	qactive := c.QueryParams().Get("active")
+	qprice := c.QueryParams().Get("price")
+	qid := c.QueryParams().Get("id")
+
+	boats, numRecords, err := repositories.GetBoats(qpage, qperpage, qmodel, qprice, qid, qactive)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"data":         boats,
+		"totalRecords": numRecords,
 	})
 }
 

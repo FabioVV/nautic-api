@@ -39,7 +39,7 @@ var ErrsMap = map[string]UserError{
 	},
 }
 
-func CheckForUserError(errToCheckFor string, err error) (UserError, bool) {
+func CheckForError(errToCheckFor string, err error) (UserError, bool) {
 	if strings.Contains(err.Error(), errToCheckFor) {
 		return ErrsMap[errToCheckFor], true
 	}

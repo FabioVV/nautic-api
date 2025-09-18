@@ -70,7 +70,7 @@ func main() {
 
 	/*PERMISSIONS/ROLES ROUTES*/
 
-	/*ACESSORIES ROUTES*/
+	/*ACCESSORIES ROUTES*/
 	accRoutes := apiv1.Group("/accessories")
 	accRoutes.Use(echojwt.WithConfig(configJwt))
 	accRoutes.Use(nmiddleware.CheckRoleAndPermissions)
@@ -86,7 +86,16 @@ func main() {
 	accRoutes.POST("/types", products.InsertAccessoryType)
 	accRoutes.DELETE("/types/:id", products.DeactivateAccessoryType)
 	accRoutes.PATCH("/types/:id", products.UpdateAccessoryType)
-	/*ACESSORIES ROUTES*/
+	/*ACCESSORIES ROUTES*/
+
+	/*BOATS ROUTES*/
+	boatsRoutes := apiv1.Group("/boats")
+	boatsRoutes.Use(echojwt.WithConfig(configJwt))
+	boatsRoutes.Use(nmiddleware.CheckRoleAndPermissions)
+
+	boatsRoutes.GET("", products.GetBoats)
+	boatsRoutes.POST("", products.InsertBoat)
+	/*BOATS ROUTES*/
 
 	/*SALES ROUTES*/
 	salRoutes := apiv1.Group("/sales")

@@ -200,7 +200,7 @@ func InsertAccessoryType(accT *models.CreateAccessoryTypeRequest) error {
 
 	_, err := db.Exec(query, accT.Type)
 	if err != nil {
-		if _, ok := utils.CheckForUserError("unique_type", err); ok {
+		if _, ok := utils.CheckForError("unique_type", err); ok {
 			return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"errors": echo.Map{"type": "type already exists"}})
 		}
 		return err
@@ -216,7 +216,7 @@ func InsertAccessory(acc *models.CreateAccessoryRequest) error {
 
 	_, err := db.Exec(query, acc.Model, acc.Details, acc.PriceBuy, acc.PriceSell, acc.IdAccessoryType)
 	if err != nil {
-		if _, ok := utils.CheckForUserError("unique_type", err); ok {
+		if _, ok := utils.CheckForError("unique_type", err); ok {
 			return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"errors": echo.Map{"type": "accessory already exists"}})
 		}
 		return err

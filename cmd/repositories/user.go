@@ -198,7 +198,7 @@ func InsertUser(user *models.CreateUserRequest) error {
 
 	_, err = db.Exec(query, user.Name, user.Email, user.Phone, hashedPassword)
 	if err != nil {
-		if errU, ok := utils.CheckForUserError("unique_email", err); ok {
+		if errU, ok := utils.CheckForError("unique_email", err); ok {
 			return echo.NewHTTPError(errU.HttpErrCode, errU)
 		}
 		return err
