@@ -57,7 +57,7 @@ type Engine struct {
 	Tempo      float64   `json:"tempo"`
 	FuelType   string    `json:"fuel_type"`
 	Active     string    `json:"active"`
-	Propulsion string    `json:"propulsion"`
+	Propulsion *string   `json:"propulsion"`
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
 }

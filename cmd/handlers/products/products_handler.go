@@ -123,6 +123,24 @@ func DeactivateAccessory(c echo.Context) error {
 	})
 }
 
+func DeactivateEngine(c echo.Context) error {
+	idParam := c.Param("id")
+
+	accID, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	err = repositories.DeactivateEngine(accID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusNoContent, echo.Map{
+		"message": "engine deactivated successfully",
+	})
+}
+
 func InsertBoat(c echo.Context) error {
 	boat := new(models.CreateBoatRequest)
 

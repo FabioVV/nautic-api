@@ -77,7 +77,7 @@ func main() {
 
 	enginesRoutes.GET("", products.GetEngines)
 	enginesRoutes.POST("", products.InsertEngine)
-	// enginesRoutes.DELETE("/:id", products.DeactivateAccessory)
+	enginesRoutes.DELETE("/:id", products.DeactivateEngine)
 	// enginesRoutes.GET("/:id", products.GetAccessory)
 	// enginesRoutes.PATCH("/:id", products.UpdateAccessory)
 
