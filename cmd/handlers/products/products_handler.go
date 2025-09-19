@@ -143,6 +143,26 @@ func InsertBoat(c echo.Context) error {
 	})
 }
 
+func InsertEngine(c echo.Context) error {
+	eng := new(models.CreateEngineRequest)
+
+	if err := c.Bind(eng); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request payload"+err.Error())
+	}
+
+	if err := c.Validate(eng); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
+	}
+
+	if err := repositories.InsertEngine(eng); err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusCreated, echo.Map{
+		"message": "Engine created successfully",
+	})
+}
+
 func InsertAccessory(c echo.Context) error {
 	accT := new(models.CreateAccessoryRequest)
 
@@ -178,6 +198,23 @@ func GetBoats(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, echo.Map{
 		"data":         boats,
+		"totalRecords": numRecords,
+	})
+}
+
+func GetEngines(c echo.Context) error {
+	qpage := c.QueryParams().Get("pageNumber")
+	qperpage := c.QueryParams().Get("perPage")
+	qmodel := c.QueryParams().Get("model")
+	qactive := c.QueryParams().Get("active")
+
+	eng, numRecords, err := repositories.GetEngines(qpage, qperpage, qmodel, qactive)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"data":         eng,
 		"totalRecords": numRecords,
 	})
 }

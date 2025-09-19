@@ -70,6 +70,19 @@ func main() {
 
 	/*PERMISSIONS/ROLES ROUTES*/
 
+	/*ENGINES ROUTES*/
+	enginesRoutes := apiv1.Group("/engines")
+	enginesRoutes.Use(echojwt.WithConfig(configJwt))
+	enginesRoutes.Use(nmiddleware.CheckRoleAndPermissions)
+
+	enginesRoutes.GET("", products.GetEngines)
+	enginesRoutes.POST("", products.InsertEngine)
+	// enginesRoutes.DELETE("/:id", products.DeactivateAccessory)
+	// enginesRoutes.GET("/:id", products.GetAccessory)
+	// enginesRoutes.PATCH("/:id", products.UpdateAccessory)
+
+	/*ENGINES ROUTES*/
+
 	/*ACCESSORIES ROUTES*/
 	accRoutes := apiv1.Group("/accessories")
 	accRoutes.Use(echojwt.WithConfig(configJwt))
