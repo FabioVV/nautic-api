@@ -170,3 +170,108 @@ func DeactivateEngine(id int) error {
 
 	return nil
 }
+
+func UpdateEngine(id int, accT *models.CreateEngineRequest) error {
+	db := storage.GetDB()
+
+	accTg, err := GetEngine(id)
+	if err != nil {
+		return err
+	}
+
+	if accTg.Active == "N" {
+		return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"errors": echo.Map{"accessory": "Engine must bet active to update it"}})
+	}
+
+	query := `UPDATE engines SET `
+	params := []interface{}{}
+	paramCount := 0
+
+	paramCount++
+	query += fmt.Sprintf("Model = $%d, ", paramCount)
+	params = append(params, *&accT.Model)
+
+	if accT.PriceSell != nil {
+		paramCount++
+		query += fmt.Sprintf("selling_price = $%d, ", paramCount)
+		params = append(params, *&accT.PriceSell)
+	}
+
+	if accT.Type != nil {
+		paramCount++
+		query += fmt.Sprintf("type = $%d, ", paramCount)
+		params = append(params, *&accT.Type)
+	}
+
+	if accT.Propulsion != nil {
+		paramCount++
+		query += fmt.Sprintf("propulsion = $%d, ", paramCount)
+		params = append(params, *&accT.Propulsion)
+	}
+
+	if accT.Weight != nil {
+		paramCount++
+		query += fmt.Sprintf("weight = $%d, ", paramCount)
+		params = append(params, *&accT.Weight)
+	}
+
+	if accT.Rotation != nil {
+		paramCount++
+		query += fmt.Sprintf("rotation = $%d, ", paramCount)
+		params = append(params, *&accT.Rotation)
+	}
+
+	if accT.Power != nil {
+		paramCount++
+		query += fmt.Sprintf("power = $%d, ", paramCount)
+		params = append(params, *&accT.Power)
+	}
+
+	if accT.Cylinders != nil {
+		paramCount++
+		query += fmt.Sprintf("cylinders = $%d, ", paramCount)
+		params = append(params, *&accT.Cylinders)
+	}
+
+	if accT.Command != nil {
+		paramCount++
+		query += fmt.Sprintf("command = $%d, ", paramCount)
+		params = append(params, *&accT.Command)
+	}
+
+	if accT.Clocks != nil {
+		paramCount++
+		query += fmt.Sprintf("clocks = $%d, ", paramCount)
+		params = append(params, *&accT.Clocks)
+	}
+
+	if accT.Tempo != nil {
+		paramCount++
+		query += fmt.Sprintf("tempo = $%d, ", paramCount)
+		params = append(params, *&accT.Tempo)
+	}
+
+	if accT.FuelType != nil {
+		paramCount++
+		query += fmt.Sprintf("fuel_type = $%d, ", paramCount)
+		params = append(params, *&accT.FuelType)
+	}
+
+	if len(params) == 0 {
+		return nil
+	}
+
+	//Remove the trailing comma and space from the query
+	query = query[:len(query)-2]
+
+	paramCount++
+	query += fmt.Sprintf(" WHERE id = $%d", paramCount)
+	params = append(params, id)
+
+	_, err = db.Exec(query, params...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -11,6 +11,34 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+func UpdateEngine(c echo.Context) error {
+	idParam := c.Param("id")
+
+	engT := new(models.CreateEngineRequest)
+
+	if err := c.Bind(engT); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request payload")
+	}
+
+	if err := c.Validate(engT); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
+	}
+
+	accTID, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	err = repositories.UpdateEngine(accTID, engT)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Engine updated successfully",
+	})
+}
+
 func UpdateAccessory(c echo.Context) error {
 	idParam := c.Param("id")
 
@@ -269,6 +297,24 @@ func GetAccessory(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, echo.Map{
 		"data": acc,
+	})
+}
+
+func GetEngine(c echo.Context) error {
+	idParam := c.Param("id")
+
+	engID, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	eng, err := repositories.GetEngine(engID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"data": eng,
 	})
 }
 
