@@ -120,6 +120,7 @@ func main() {
 	salRoutes.DELETE("/communication-means/:id", sales.DeactivateComMeans)
 	salRoutes.PATCH("/communication-means/:id", sales.UpdateComMeans)
 
+	salRoutes.GET("/negotiations/:id", sales.GetNegotiation)
 	salRoutes.GET("/negotiations", sales.GetNegotiations)
 	salRoutes.POST("/negotiations", sales.InsertNegotiation)
 

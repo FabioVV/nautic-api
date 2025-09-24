@@ -43,6 +43,7 @@ type Negotiation struct {
 	CabOpen            *string  `json:"cab_open"`
 	Stage              int64    `json:"stage"`
 	Qualified          string   `json:"qualified"`
+	QualifiedType      string   `json:"qualified_type"`
 }
 
 type CreateNegotiationRequest struct {

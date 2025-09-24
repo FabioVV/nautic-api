@@ -13,6 +13,24 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+func GetNegotiation(c echo.Context) error {
+	idParam := c.Param("id")
+
+	negID, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	acc, err := repositories.GetNegotiation(negID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"data": acc,
+	})
+}
+
 func GetNegotiations(c echo.Context) error {
 
 	user, ok := c.Get("user").(*jwt.Token)

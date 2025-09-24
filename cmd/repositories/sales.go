@@ -478,3 +478,44 @@ func GetNegotiations(search string, userId int) ([]models.Negotiation, int, erro
 
 	return negs, numRecords, nil
 }
+
+func GetNegotiation(id int) (models.Negotiation, error) {
+	db := storage.GetDB()
+
+	var curNeg models.Negotiation
+	query := `SELECT SB.id, 
+			SB.id_customer,
+	 		SB.id_mean_communication, 
+			C.name,
+			C.email,
+			C.phone,
+			MC.name,
+			SB.boat_name, 
+			SB.estimated_value, 
+			SB.max_estimated_value, 
+			SB.customer_city, 
+			SB.customer_navigation_city, 
+			SB.boat_capacity_needed, 
+			SB.new_used, 
+			SB.cab_open, 
+			SB.stage, 
+			C.qualified,
+			C.qualified_type
+	FROM so_business AS SB
+
+	INNER JOIN customers AS C ON SB.id_customer = C.id
+	INNER JOIN mean_communication AS MC ON SB.id_mean_communication = MC.id
+	WHERE SB.id = $1`
+
+	if err := db.QueryRow(query, id).Scan(&curNeg.Id, &curNeg.CustomerId, &curNeg.MeanComId,
+		&curNeg.Name, &curNeg.Email, &curNeg.Phone, &curNeg.MeamComName,
+		&curNeg.BoatName, &curNeg.EstimatedValue, &curNeg.MaxEstimatedValue, &curNeg.City,
+		&curNeg.NavigationCity, &curNeg.BoatCapacityNeeded, &curNeg.NewUsed, &curNeg.CabOpen, &curNeg.Stage, &curNeg.Qualified, &curNeg.QualifiedType); err != nil {
+		if err == sql.ErrNoRows {
+			return curNeg, echo.NewHTTPError(http.StatusNotFound, "Negotiation not found")
+		}
+		return curNeg, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve negotiation")
+	}
+
+	return curNeg, nil
+}
