@@ -31,6 +31,25 @@ func GetNegotiation(c echo.Context) error {
 	})
 }
 
+func GetNegotiationHistory(c echo.Context) error {
+	idParam := c.Param("id")
+
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	data, numRecords, err := repositories.GetNegotiationHistory(id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"data":         data,
+		"totalRecords": numRecords,
+	})
+}
+
 func GetNegotiations(c echo.Context) error {
 
 	user, ok := c.Get("user").(*jwt.Token)
@@ -171,6 +190,34 @@ func InsertComMeans(c echo.Context) error {
 
 	return c.JSON(http.StatusCreated, echo.Map{
 		"message": "communication mean created successfully",
+	})
+}
+
+func InsertNegotiationHistory(c echo.Context) error {
+	idParam := c.Param("id")
+
+	negT := new(models.CreateNegotiationHistoryRequest)
+
+	if err := c.Bind(negT); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request payload"+err.Error())
+	}
+
+	if err := c.Validate(negT); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
+	}
+
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	err = repositories.CreateNegotiationHistory(id, negT)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Negotiation history created successfully",
 	})
 }
 

@@ -46,6 +46,18 @@ type Negotiation struct {
 	QualifiedType      string   `json:"qualified_type"`
 }
 
+type NegotiationHistory struct {
+	Id           int64     `json:"id"`
+	ComMeanId    *int64    `json:"id_mean_communication"`
+	MeamComName  string    `json:"com_name"`
+	UserId       *int64    `json:"id_user"`
+	CustomerId   *int64    `json:"id_customer"`
+	CustomerName string    `json:"customer_name"`
+	Description  *string   `json:"description"`
+	Stage        *int64    `json:"stage"`
+	DateCreated  time.Time `json:"created_at"`
+}
+
 type CreateNegotiationRequest struct {
 	Name           *string  `json:"Name" validate:"required"`
 	Email          *string  `json:"Email" validate:"required"`
@@ -61,6 +73,21 @@ type CreateNegotiationRequest struct {
 	CabinatedOpen  *string  `json:"CabinatedOpen,omitempty"`
 	ComMeanId      *int32   `json:"ComMeanId"`
 	UserId         *int64   `json:"UserId" validate:"required"`
+}
+
+// acoForm = this.formBuilder.group({
+//     Description: ['', [Validators.required]],
+//     ComMeanName: ['', [Validators.required]],
+//     ComMeanId: ['', [Validators.required]],
+//     UserId: ['', []],
+// })
+
+type CreateNegotiationHistoryRequest struct {
+	Description *string `json:"Description" validate:"required"`
+	ComMeanId   *int64  `json:"ComMeanId" validate:"required"`
+	UserId      *int64  `json:"UserId" validate:"required"`
+	CustomerId  *int64  `json:"CustomerId" validate:"required"`
+	Stage       *int64  `json:"Stage" validate:"required"`
 }
 
 type CreateCommunicationMeanRequest struct {

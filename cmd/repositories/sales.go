@@ -133,11 +133,27 @@ func InsertNegotiation(neg *models.CreateNegotiationRequest) error {
 	return nil
 }
 
+func CreateNegotiationHistory(id int, neg *models.CreateNegotiationHistoryRequest) error {
+	db := storage.GetDB()
+
+	query := "INSERT INTO business_histories (id_user, id_customer, description, stage, id_mean_communication, id_business) VALUES ($1, $2, $3, $4, $5, $6)"
+
+	_, err := db.Exec(query, neg.UserId, neg.CustomerId, neg.Description, neg.Stage, neg.ComMeanId, id)
+	if err != nil {
+		// if _, ok := utils.CheckForError("unique_type", err); ok {
+		// 	return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"errors": echo.Map{"type": "Mean already exists"}})
+		// }
+		return err
+	}
+
+	return nil
+}
+
 func GetCustomersBirthday() ([]models.Customer, int, error) {
 	db := storage.GetDB()
 	var custs []models.Customer
 
-	query := fmt.Sprintf(`
+	query := `
 	SELECT C.id, C.id_user, C.id_mean_communication, U.name AS seller_name, MC.name,
 	C.name, C.email, C.phone, C.birthdate, C.pf_pj, 
 	C.cpf, C.cnpj, C.cep, C.street, C.neighborhood,
@@ -156,7 +172,7 @@ func GetCustomersBirthday() ([]models.Customer, int, error) {
     AND EXTRACT(DAY FROM C.birthdate) <= EXTRACT(DAY FROM CURRENT_DATE + INTERVAL '1 month'))
 
 	ORDER BY EXTRACT(MONTH FROM C.birthdate), EXTRACT(DAY FROM C.birthdate), C.name
-	`)
+	`
 
 	rows, err := db.Query(query)
 
@@ -167,7 +183,7 @@ func GetCustomersBirthday() ([]models.Customer, int, error) {
 		return custs, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve accs"+err.Error())
 	}
 
-	queryTotalRecords := fmt.Sprintf(`
+	queryTotalRecords := `
 	SELECT COUNT(1)
 	FROM customers AS C
 	INNER JOIN users AS U ON C.id_user = U.id
@@ -182,7 +198,7 @@ func GetCustomersBirthday() ([]models.Customer, int, error) {
     AND EXTRACT(DAY FROM C.birthdate) <= EXTRACT(DAY FROM CURRENT_DATE + INTERVAL '1 month'))
 
 	ORDER BY EXTRACT(MONTH FROM C.birthdate), EXTRACT(DAY FROM C.birthdate), C.name
-	`)
+	`
 
 	rowsCount := db.QueryRow(queryTotalRecords)
 	numRecords := 0
@@ -384,6 +400,81 @@ func GetComMeans(pagenum string, limitPerPage string, name string, active string
 	}
 
 	return accs, numRecords, nil
+}
+
+func GetNegotiationHistory(id_business int) ([]models.NegotiationHistory, int, error) {
+	db := storage.GetDB()
+
+	var negsh []models.NegotiationHistory
+
+	// conds := []string{}
+	// args := []interface{}{}
+
+	// where := ""
+	// if len(conds) > 0 {
+	// 	where = "WHERE " + strings.Join(conds, " AND ")
+	// }
+
+	query := `
+	SELECT BIH.id, BIH.id_user, BIH.id_customer, BIH.id_mean_communication, 
+	BIH.description, BIH.stage, BIH.created_at,
+	C.name, MC.name
+
+	FROM business_histories AS BIH
+
+	INNER JOIN customers AS C ON BIH.id_customer = C.id
+	INNER JOIN mean_communication AS MC ON BIH.id_mean_communication = MC.id
+	INNER JOIN so_business AS SB ON BIH.id_business = SB.id AND SB.id = $1
+
+	ORDER BY BIH.id
+	`
+
+	rows, err := db.Query(query, id_business)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return negsh, 0, echo.NewHTTPError(http.StatusNotFound, "Negotiations not found")
+		}
+		return negsh, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve negotiations"+err.Error())
+	}
+
+	queryTotalRecords := `
+	SELECT COUNT(1)
+
+	FROM business_histories AS BIH
+
+	INNER JOIN customers AS C ON BIH.id_customer = C.id
+	INNER JOIN mean_communication AS MC ON BIH.id_mean_communication = MC.id
+	INNER JOIN so_business AS SB ON BIH.id_business = SB.id AND SB.id = $1
+
+	ORDER BY BIH.id
+	`
+	//println(queryTotalRecords)
+
+	rowsCount := db.QueryRow(queryTotalRecords, id_business)
+	numRecords := 0
+	rowsCount.Scan(&numRecords)
+
+	for rows.Next() {
+		var curNegH models.NegotiationHistory
+
+		// 		SELECT BIH.id, BIH.id_user, BIH.id_customer, BIH.id_mean_communication,
+		// BIH.description, BIH.stage, BIH.created_at,
+		// C.name, MC.name
+
+		if err := rows.Scan(&curNegH.Id, &curNegH.UserId, &curNegH.CustomerId, &curNegH.ComMeanId,
+			&curNegH.Description, &curNegH.Stage, &curNegH.DateCreated, &curNegH.CustomerName, &curNegH.MeamComName); err != nil {
+			return nil, 0, fmt.Errorf("scan error: %w", err)
+		}
+
+		negsh = append(negsh, curNegH)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("rows error: %w", err)
+	}
+
+	return negsh, numRecords, nil
 }
 
 func GetNegotiations(search string, userId int) ([]models.Negotiation, int, error) {

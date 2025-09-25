@@ -125,6 +125,9 @@ func main() {
 	salRoutes.POST("/negotiations", sales.InsertNegotiation)
 	salRoutes.PATCH("/negotiations/:id", sales.UpdateNegotiation)
 
+	salRoutes.POST("/negotiations/:id/history", sales.InsertNegotiationHistory)
+	salRoutes.GET("/negotiations/:id/history", sales.GetNegotiationHistory)
+
 	salRoutes.GET("/customers", sales.GetCustomers)
 	salRoutes.GET("/customers-birthday", sales.GetCustomersBirthday)
 
