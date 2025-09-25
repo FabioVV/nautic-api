@@ -519,3 +519,98 @@ func GetNegotiation(id int) (models.Negotiation, error) {
 
 	return curNeg, nil
 }
+
+func UpdateNegotiation(id int, negT *models.CreateNegotiationRequest) error {
+	db := storage.GetDB()
+
+	// _, err := GetNegotiation(id)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// if accTg.Active == "N" {
+	// 	return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"errors": echo.Map{"accessory": "Engine must bet active to update it"}})
+	// }
+
+	query := `UPDATE so_business SET `
+	params := []interface{}{}
+	paramCount := 0
+
+	if negT.EstimatedValue != nil {
+		paramCount++
+		query += fmt.Sprintf("estimated_value = $%d, ", paramCount)
+		params = append(params, *&negT.EstimatedValue)
+	}
+
+	if negT.BoatName != nil {
+		paramCount++
+		query += fmt.Sprintf("boat_name = $%d, ", paramCount)
+		params = append(params, *&negT.BoatName)
+	}
+
+	if negT.Qualified != nil {
+		paramCount++
+		query += fmt.Sprintf("qualified = $%d, ", paramCount)
+		params = append(params, *&negT.Qualified)
+	}
+
+	if negT.QualifiedType != nil {
+		paramCount++
+		query += fmt.Sprintf("qualified_type = $%d, ", paramCount)
+		params = append(params, *&negT.QualifiedType)
+	}
+
+	if negT.City != nil {
+		paramCount++
+		query += fmt.Sprintf("customer_city = $%d, ", paramCount)
+		params = append(params, *&negT.City)
+	}
+
+	if negT.NavigationCity != nil {
+		paramCount++
+		query += fmt.Sprintf("customer_navigation_city = $%d, ", paramCount)
+		params = append(params, *&negT.NavigationCity)
+	}
+
+	if negT.BoatCapacity != nil {
+		paramCount++
+		query += fmt.Sprintf("boat_capacity_needed = $%d, ", paramCount)
+		params = append(params, *&negT.BoatCapacity)
+	}
+
+	if negT.CabinatedOpen != nil {
+		paramCount++
+		query += fmt.Sprintf("cab_open = $%d, ", paramCount)
+		params = append(params, *&negT.CabinatedOpen)
+	}
+
+	if negT.ComMeanId != nil {
+		paramCount++
+		query += fmt.Sprintf("id_mean_communication = $%d, ", paramCount)
+		params = append(params, *&negT.ComMeanId)
+	}
+
+	if negT.NewUsed != nil {
+		paramCount++
+		query += fmt.Sprintf("new_used = $%d, ", paramCount)
+		params = append(params, *&negT.NewUsed)
+	}
+
+	if len(params) == 0 {
+		return nil
+	}
+
+	//Remove the trailing comma and space from the query
+	query = query[:len(query)-2]
+
+	paramCount++
+	query += fmt.Sprintf(" WHERE id = $%d", paramCount)
+	params = append(params, id)
+
+	_, err := db.Exec(query, params...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -193,3 +193,31 @@ func InsertNegotiation(c echo.Context) error {
 		"message": "Negotiation created successfully",
 	})
 }
+
+func UpdateNegotiation(c echo.Context) error {
+	idParam := c.Param("id")
+
+	negT := new(models.CreateNegotiationRequest)
+
+	if err := c.Bind(negT); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request payload"+err.Error())
+	}
+
+	if err := c.Validate(negT); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
+	}
+
+	accTID, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	err = repositories.UpdateNegotiation(accTID, negT)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Engine updated successfully",
+	})
+}

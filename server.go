@@ -123,6 +123,7 @@ func main() {
 	salRoutes.GET("/negotiations/:id", sales.GetNegotiation)
 	salRoutes.GET("/negotiations", sales.GetNegotiations)
 	salRoutes.POST("/negotiations", sales.InsertNegotiation)
+	salRoutes.PATCH("/negotiations/:id", sales.UpdateNegotiation)
 
 	salRoutes.GET("/customers", sales.GetCustomers)
 	salRoutes.GET("/customers-birthday", sales.GetCustomersBirthday)

@@ -52,8 +52,13 @@ type CreateNegotiationRequest struct {
 	Phone          *string  `json:"Phone" validate:"required"`
 	EstimatedValue *float64 `json:"EstimatedValue" validate:"required"`
 	BoatName       *string  `json:"BoatName" validate:"required"`
+	NewUsed        *string  `json:"NewUsed,omitempty"`
 	Qualified      *string  `json:"Qualified,omitempty"`
 	QualifiedType  *string  `json:"QualifiedType,omitempty"`
+	City           *string  `json:"City,omitempty"`
+	NavigationCity *string  `json:"NavigationCity,omitempty"`
+	BoatCapacity   *int16   `json:"BoatCapacity,omitempty"`
+	CabinatedOpen  *string  `json:"CabinatedOpen,omitempty"`
 	ComMeanId      *int32   `json:"ComMeanId"`
 	UserId         *int64   `json:"UserId" validate:"required"`
 }
