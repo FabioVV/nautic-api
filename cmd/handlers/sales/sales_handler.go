@@ -77,6 +77,25 @@ func GetNegotiations(c echo.Context) error {
 	})
 }
 
+func GetCustomerNegotiationsHistories(c echo.Context) error {
+	idParam := c.Param("id")
+
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	data, numRecords, err := repositories.GetCustomerNegotiationsHistories(id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"data":         data,
+		"totalRecords": numRecords,
+	})
+}
+
 func GetCustomersBirthday(c echo.Context) error {
 	data, numRecords, err := repositories.GetCustomersBirthday()
 	if err != nil {
@@ -274,6 +293,6 @@ func UpdateNegotiation(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, echo.Map{
-		"message": "Engine updated successfully",
+		"message": "Negotiation updated successfully",
 	})
 }

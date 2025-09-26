@@ -41,9 +41,15 @@ type Negotiation struct {
 	BoatCapacityNeeded *int32   `json:"boat_cap_needed"`
 	NewUsed            *string  `json:"new_used"`
 	CabOpen            *string  `json:"cab_open"`
-	Stage              int64    `json:"stage"`
-	Qualified          string   `json:"qualified"`
-	QualifiedType      string   `json:"qualified_type"`
+
+	HasBoat      *string `json:"has_boat"`
+	HasBoatWhich *string `json:"has_boat_which"`
+	MaxPesBoat   *string `json:"boat_length_max"`
+	MinPesBoat   *string `json:"boat_length_min"`
+
+	Stage         int64  `json:"stage"`
+	Qualified     string `json:"qualified"`
+	QualifiedType string `json:"qualified_type"`
 }
 
 type NegotiationHistory struct {
@@ -56,6 +62,7 @@ type NegotiationHistory struct {
 	Description  *string   `json:"description"`
 	Stage        *int64    `json:"stage"`
 	DateCreated  time.Time `json:"created_at"`
+	BusinessId   *int64    `json:"id_business"`
 }
 
 type CreateNegotiationRequest struct {
@@ -72,7 +79,13 @@ type CreateNegotiationRequest struct {
 	BoatCapacity   *int16   `json:"BoatCapacity,omitempty"`
 	CabinatedOpen  *string  `json:"CabinatedOpen,omitempty"`
 	ComMeanId      *int32   `json:"ComMeanId"`
-	UserId         *int64   `json:"UserId" validate:"required"`
+
+	HasBoat    *string `json:"HasBoat,omitempty"`
+	WhichBoat  *string `json:"WhichBoat,omitempty"`
+	MinPesBoat *int    `json:"MinPesBoat,omitempty"`
+	MaxPesBoat *int    `json:"MaxPesBoat,omitempty"`
+
+	UserId *int64 `json:"UserId" validate:"required"`
 }
 
 // acoForm = this.formBuilder.group({

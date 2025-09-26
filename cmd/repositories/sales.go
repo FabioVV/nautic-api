@@ -136,6 +136,20 @@ func InsertNegotiation(neg *models.CreateNegotiationRequest) error {
 func CreateNegotiationHistory(id int, neg *models.CreateNegotiationHistoryRequest) error {
 	db := storage.GetDB()
 
+	if id == 0 {
+		query := "INSERT INTO business_histories (id_user, id_customer, description, stage, id_mean_communication, id_business) VALUES ($1, $2, $3, $4, $5, $6)"
+
+		_, err := db.Exec(query, neg.UserId, neg.CustomerId, neg.Description, neg.Stage, neg.ComMeanId, nil)
+		if err != nil {
+			// if _, ok := utils.CheckForError("unique_type", err); ok {
+			// 	return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"errors": echo.Map{"type": "Mean already exists"}})
+			// }
+			return err
+		}
+
+		return nil
+	}
+
 	query := "INSERT INTO business_histories (id_user, id_customer, description, stage, id_mean_communication, id_business) VALUES ($1, $2, $3, $4, $5, $6)"
 
 	_, err := db.Exec(query, neg.UserId, neg.CustomerId, neg.Description, neg.Stage, neg.ComMeanId, id)
@@ -428,7 +442,7 @@ func GetNegotiationHistory(id_business int, id_user int) ([]models.NegotiationHi
 
 	WHERE BIH.id_user = $2
 
-	ORDER BY BIH.id
+	ORDER BY BIH.id DESC
 	`
 
 	rows, err := db.Query(query, id_business, id_user)
@@ -452,7 +466,7 @@ func GetNegotiationHistory(id_business int, id_user int) ([]models.NegotiationHi
 	WHERE BIH.id_user = $2
 
 
-	ORDER BY BIH.id
+	ORDER BY BIH.id DESC
 	`
 	//println(queryTotalRecords)
 
@@ -575,6 +589,85 @@ func GetNegotiations(search string, userId int) ([]models.Negotiation, int, erro
 	return negs, numRecords, nil
 }
 
+func GetCustomerNegotiationsHistories(customerId int) ([]models.NegotiationHistory, int, error) {
+	db := storage.GetDB()
+
+	var negsh []models.NegotiationHistory
+
+	// conds := []string{}
+	// args := []interface{}{}
+
+	// where := ""
+	// if len(conds) > 0 {
+	// 	where = "WHERE " + strings.Join(conds, " AND ")
+	// }
+
+	query := `
+	SELECT BIH.id, BIH.id_user, BIH.id_customer, BIH.id_mean_communication, 
+	BIH.description, BIH.stage, BIH.created_at, BIH.id_business, C.name, MC.name
+
+	FROM business_histories AS BIH
+
+	INNER JOIN customers AS C ON BIH.id_customer = C.id
+	INNER JOIN mean_communication AS MC ON BIH.id_mean_communication = MC.id
+	LEFT JOIN so_business AS SB ON BIH.id_business = SB.id
+
+	WHERE C.id = $1
+
+	ORDER BY BIH.id DESC
+	`
+
+	rows, err := db.Query(query, customerId)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return negsh, 0, echo.NewHTTPError(http.StatusNotFound, "Negotiations not found")
+		}
+		return negsh, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve negotiations")
+	}
+
+	queryTotalRecords := `
+	SELECT COUNT(1)
+
+	FROM business_histories AS BIH
+
+	INNER JOIN customers AS C ON BIH.id_customer = C.id
+	INNER JOIN mean_communication AS MC ON BIH.id_mean_communication = MC.id
+	INNER JOIN so_business AS SB ON BIH.id_business = SB.id
+
+	WHERE C.id = $1
+
+
+	ORDER BY BIH.id
+	`
+	//println(queryTotalRecords)
+
+	rowsCount := db.QueryRow(queryTotalRecords, customerId)
+	numRecords := 0
+	rowsCount.Scan(&numRecords)
+
+	for rows.Next() {
+		var curNegH models.NegotiationHistory
+
+		// 		SELECT BIH.id, BIH.id_user, BIH.id_customer, BIH.id_mean_communication,
+		// BIH.description, BIH.stage, BIH.created_at,
+		// C.name, MC.name
+
+		if err := rows.Scan(&curNegH.Id, &curNegH.UserId, &curNegH.CustomerId, &curNegH.ComMeanId,
+			&curNegH.Description, &curNegH.Stage, &curNegH.DateCreated, &curNegH.BusinessId, &curNegH.CustomerName, &curNegH.MeamComName); err != nil {
+			return nil, 0, fmt.Errorf("scan error: %w", err)
+		}
+
+		negsh = append(negsh, curNegH)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("rows error: %w", err)
+	}
+
+	return negsh, numRecords, nil
+}
+
 func GetNegotiation(id int) (models.Negotiation, error) {
 	db := storage.GetDB()
 
@@ -595,8 +688,13 @@ func GetNegotiation(id int) (models.Negotiation, error) {
 			SB.new_used, 
 			SB.cab_open, 
 			SB.stage, 
+			SB.has_boat, 
+			SB.has_boat_which, 
+			SB.boat_length_min, 
+			SB.boat_length_max, 
 			C.qualified,
 			C.qualified_type
+			
 	FROM so_business AS SB
 
 	INNER JOIN customers AS C ON SB.id_customer = C.id
@@ -606,7 +704,9 @@ func GetNegotiation(id int) (models.Negotiation, error) {
 	if err := db.QueryRow(query, id).Scan(&curNeg.Id, &curNeg.CustomerId, &curNeg.MeanComId,
 		&curNeg.Name, &curNeg.Email, &curNeg.Phone, &curNeg.MeamComName,
 		&curNeg.BoatName, &curNeg.EstimatedValue, &curNeg.MaxEstimatedValue, &curNeg.City,
-		&curNeg.NavigationCity, &curNeg.BoatCapacityNeeded, &curNeg.NewUsed, &curNeg.CabOpen, &curNeg.Stage, &curNeg.Qualified, &curNeg.QualifiedType); err != nil {
+		&curNeg.NavigationCity, &curNeg.BoatCapacityNeeded, &curNeg.NewUsed, &curNeg.CabOpen,
+		&curNeg.Stage, &curNeg.HasBoat, &curNeg.HasBoatWhich, &curNeg.MinPesBoat, &curNeg.MaxPesBoat,
+		&curNeg.Qualified, &curNeg.QualifiedType); err != nil {
 		if err == sql.ErrNoRows {
 			return curNeg, echo.NewHTTPError(http.StatusNotFound, "Negotiation not found")
 		}
@@ -690,6 +790,30 @@ func UpdateNegotiation(id int, negT *models.CreateNegotiationRequest) error {
 		paramCount++
 		query += fmt.Sprintf("new_used = $%d, ", paramCount)
 		params = append(params, *&negT.NewUsed)
+	}
+
+	if negT.HasBoat != nil {
+		paramCount++
+		query += fmt.Sprintf("has_boat = $%d, ", paramCount)
+		params = append(params, *&negT.HasBoat)
+	}
+
+	if negT.MinPesBoat != nil {
+		paramCount++
+		query += fmt.Sprintf("boat_length_min = $%d, ", paramCount)
+		params = append(params, *&negT.MinPesBoat)
+	}
+
+	if negT.MaxPesBoat != nil {
+		paramCount++
+		query += fmt.Sprintf("boat_length_max = $%d, ", paramCount)
+		params = append(params, *&negT.MaxPesBoat)
+	}
+
+	if negT.WhichBoat != nil {
+		paramCount++
+		query += fmt.Sprintf("has_boat_which = $%d, ", paramCount)
+		params = append(params, *&negT.WhichBoat)
 	}
 
 	if len(params) == 0 {

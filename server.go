@@ -131,6 +131,12 @@ func main() {
 	salRoutes.GET("/customers", sales.GetCustomers)
 	salRoutes.GET("/customers-birthday", sales.GetCustomersBirthday)
 
+	/*SALES CUSTOMERS ROUTES*/
+	salCustRoutes := salRoutes.Group("/customers")
+	salCustRoutes.Use(echojwt.WithConfig(configJwt))
+	salCustRoutes.Use(nmiddleware.CheckRoleAndPermissions)
+	salCustRoutes.GET("/:id/negotiations/history", sales.GetCustomerNegotiationsHistories)
+	/*SALES CUSTOMERS ROUTES*/
 	/*SALES ROUTES*/
 
 	e.Logger.Fatal(e.Start(":8080"))
