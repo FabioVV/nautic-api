@@ -59,9 +59,9 @@ type NegotiationHistory struct {
 }
 
 type CreateNegotiationRequest struct {
-	Name           *string  `json:"Name" validate:"required"`
-	Email          *string  `json:"Email" validate:"required"`
-	Phone          *string  `json:"Phone" validate:"required"`
+	Name           *string  `json:"Name"`
+	Email          *string  `json:"Email"`
+	Phone          *string  `json:"Phone"`
 	EstimatedValue *float64 `json:"EstimatedValue" validate:"required"`
 	BoatName       *string  `json:"BoatName" validate:"required"`
 	NewUsed        *string  `json:"NewUsed,omitempty"`

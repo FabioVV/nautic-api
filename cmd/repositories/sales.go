@@ -402,7 +402,7 @@ func GetComMeans(pagenum string, limitPerPage string, name string, active string
 	return accs, numRecords, nil
 }
 
-func GetNegotiationHistory(id_business int) ([]models.NegotiationHistory, int, error) {
+func GetNegotiationHistory(id_business int, id_user int) ([]models.NegotiationHistory, int, error) {
 	db := storage.GetDB()
 
 	var negsh []models.NegotiationHistory
@@ -426,10 +426,12 @@ func GetNegotiationHistory(id_business int) ([]models.NegotiationHistory, int, e
 	INNER JOIN mean_communication AS MC ON BIH.id_mean_communication = MC.id
 	INNER JOIN so_business AS SB ON BIH.id_business = SB.id AND SB.id = $1
 
+	WHERE BIH.id_user = $2
+
 	ORDER BY BIH.id
 	`
 
-	rows, err := db.Query(query, id_business)
+	rows, err := db.Query(query, id_business, id_user)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -447,11 +449,14 @@ func GetNegotiationHistory(id_business int) ([]models.NegotiationHistory, int, e
 	INNER JOIN mean_communication AS MC ON BIH.id_mean_communication = MC.id
 	INNER JOIN so_business AS SB ON BIH.id_business = SB.id AND SB.id = $1
 
+	WHERE BIH.id_user = $2
+
+
 	ORDER BY BIH.id
 	`
 	//println(queryTotalRecords)
 
-	rowsCount := db.QueryRow(queryTotalRecords, id_business)
+	rowsCount := db.QueryRow(queryTotalRecords, id_business, id_user)
 	numRecords := 0
 	rowsCount.Scan(&numRecords)
 

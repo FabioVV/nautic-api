@@ -1,15 +1,14 @@
 package sales
 
 import (
-	"nautic/auth"
 	"nautic/cmd/repositories"
+	"nautic/cmd/utils"
 	"nautic/models"
 	"nautic/validation"
 	"strconv"
 
 	"net/http"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
 
@@ -34,12 +33,17 @@ func GetNegotiation(c echo.Context) error {
 func GetNegotiationHistory(c echo.Context) error {
 	idParam := c.Param("id")
 
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	data, numRecords, err := repositories.GetNegotiationHistory(id)
+	data, numRecords, err := repositories.GetNegotiationHistory(id, claims.Id)
 	if err != nil {
 		return err
 	}
@@ -52,13 +56,9 @@ func GetNegotiationHistory(c echo.Context) error {
 
 func GetNegotiations(c echo.Context) error {
 
-	user, ok := c.Get("user").(*jwt.Token)
-	if !ok {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to parse user credentials"})
-	}
-	claims, ok := user.Claims.(*auth.JwtCustomClaims)
-	if !ok {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to parse user credentials claims"})
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
 	}
 
 	// qpage := c.QueryParams().Get("pageNumber")
@@ -196,10 +196,15 @@ func InsertComMeans(c echo.Context) error {
 func InsertNegotiationHistory(c echo.Context) error {
 	idParam := c.Param("id")
 
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
 	negT := new(models.CreateNegotiationHistoryRequest)
 
 	if err := c.Bind(negT); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request payload"+err.Error())
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request payload")
 	}
 
 	if err := c.Validate(negT); err != nil {
@@ -209,6 +214,10 @@ func InsertNegotiationHistory(c echo.Context) error {
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	if claims.Id != int(*negT.UserId) {
+		return echo.NewHTTPError(http.StatusUnauthorized, "Invalid ID for this resource")
 	}
 
 	err = repositories.CreateNegotiationHistory(id, negT)
