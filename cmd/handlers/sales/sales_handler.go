@@ -12,6 +12,24 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+func GetCustomer(c echo.Context) error {
+	idParam := c.Param("id")
+
+	cID, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	acc, err := repositories.GetCustomer(cID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"data": acc,
+	})
+}
+
 func GetNegotiation(c echo.Context) error {
 	idParam := c.Param("id")
 
@@ -266,6 +284,34 @@ func InsertNegotiation(c echo.Context) error {
 
 	return c.JSON(http.StatusCreated, echo.Map{
 		"message": "Negotiation created successfully",
+	})
+}
+
+func UpdateCustomer(c echo.Context) error {
+	idParam := c.Param("id")
+
+	cT := new(models.CustomerRequest)
+
+	if err := c.Bind(cT); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request payload"+err.Error())
+	}
+
+	if err := c.Validate(cT); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
+	}
+
+	accTID, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	err = repositories.UpdateCustomer(accTID, cT)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Customer updated successfully",
 	})
 }
 

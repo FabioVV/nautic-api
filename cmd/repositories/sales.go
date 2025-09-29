@@ -669,6 +669,48 @@ func GetCustomerNegotiationsHistories(customerId int) ([]models.NegotiationHisto
 	return negsh, numRecords, nil
 }
 
+func GetCustomer(id int) (models.Customer, error) {
+	db := storage.GetDB()
+
+	var curC models.Customer
+	query := `SELECT C.id, C.id_user, C.id_mean_communication, U.name AS seller_name, MC.name,
+	C.name, C.email, C.phone, C.birthdate, C.pf_pj, 
+	C.cpf, C.cnpj, C.cep, C.street, C.neighborhood,
+	C.city, C.complement, C.qualified, C.active, C.active_contact,
+	SB_LAST.estimated_value, SB_LAST.customer_city, SB_LAST.customer_navigation_city, SB_LAST.boat_capacity_needed,
+	SB_LAST.new_used, SB_LAST.cab_open, SB_LAST.boat_length_min, SB_LAST.boat_length_max
+
+	FROM customers AS C
+	INNER JOIN users AS U ON C.id_user = U.id
+	INNER JOIN mean_communication AS MC ON C.id_mean_communication = MC.id
+	LEFT JOIN LATERAL (
+		SELECT *
+		FROM so_business sb
+		WHERE sb.id_customer = C.id
+		ORDER BY sb.created_at DESC    -- or ORDER BY sb.id DESC
+		LIMIT 1
+	) AS SB_LAST ON true
+
+	WHERE C.id = $1
+	ORDER BY C.id, C.name
+	`
+
+	if err := db.QueryRow(query, id).Scan(&curC.Id, &curC.UserId, &curC.MeanComId,
+		&curC.SellerName, &curC.MeamComName, &curC.Name,
+		&curC.Email, &curC.Phone, &curC.BirthDate, &curC.PfPj,
+		&curC.Cpf, &curC.Cnpj, &curC.Cep, &curC.Street, &curC.Neighborhood,
+		&curC.City, &curC.Complement, &curC.Qualified, &curC.Active,
+		&curC.ActiveContact, &curC.EstimatedValue, &curC.CustomerCity, &curC.NavigationCity,
+		&curC.BoatCapacity, &curC.NewUsed, &curC.CabinatedOpen, &curC.MinPesBoat, &curC.MaxPesBoat); err != nil {
+		if err == sql.ErrNoRows {
+			return curC, echo.NewHTTPError(http.StatusNotFound, "Negotiation not found")
+		}
+		return curC, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve negotiation")
+	}
+
+	return curC, nil
+}
+
 func GetNegotiation(id int) (models.Negotiation, error) {
 	db := storage.GetDB()
 
@@ -715,6 +757,119 @@ func GetNegotiation(id int) (models.Negotiation, error) {
 	}
 
 	return curNeg, nil
+}
+
+func UpdateCustomer(id int, cT *models.CustomerRequest) error {
+	db := storage.GetDB()
+
+	// _, err := GetNegotiation(id)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// if accTg.Active == "N" {
+	// 	return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"errors": echo.Map{"accessory": "Engine must bet active to update it"}})
+	// }
+
+	query := `UPDATE customers SET `
+	params := []interface{}{}
+	paramCount := 0
+
+	if cT.Name != nil {
+		paramCount++
+		query += fmt.Sprintf("name = $%d, ", paramCount)
+		params = append(params, *&cT.Name)
+	}
+
+	if cT.Email != nil {
+		paramCount++
+		query += fmt.Sprintf("email = $%d, ", paramCount)
+		params = append(params, *&cT.Email)
+	}
+
+	if cT.Phone != nil {
+		paramCount++
+		query += fmt.Sprintf("phone = $%d, ", paramCount)
+		params = append(params, *&cT.Phone)
+	}
+
+	if cT.Cep != nil {
+		paramCount++
+		query += fmt.Sprintf("cep = $%d, ", paramCount)
+		params = append(params, *&cT.Cep)
+	}
+
+	if cT.Street != nil {
+		paramCount++
+		query += fmt.Sprintf("street = $%d, ", paramCount)
+		params = append(params, *&cT.Street)
+	}
+
+	if cT.Neighborhood != nil {
+		paramCount++
+		query += fmt.Sprintf("neighborhood = $%d, ", paramCount)
+		params = append(params, *&cT.Neighborhood)
+	}
+
+	if cT.Complement != nil {
+		paramCount++
+		query += fmt.Sprintf("complement = $%d, ", paramCount)
+		params = append(params, *&cT.Complement)
+	}
+
+	if cT.State != nil {
+		paramCount++
+		query += fmt.Sprintf("state = $%d, ", paramCount)
+		params = append(params, *&cT.State)
+	}
+
+	if cT.Qualified != nil {
+		paramCount++
+		query += fmt.Sprintf("qualified = $%d, ", paramCount)
+		params = append(params, *&cT.Qualified)
+	}
+
+	if cT.QualifiedType != nil {
+		paramCount++
+		query += fmt.Sprintf("qualified_type = $%d, ", paramCount)
+		params = append(params, *&cT.QualifiedType)
+	}
+
+	if cT.City != nil {
+		paramCount++
+		query += fmt.Sprintf("city = $%d, ", paramCount)
+		params = append(params, *&cT.City)
+	}
+
+	if cT.HasBoat != nil {
+		paramCount++
+		query += fmt.Sprintf("has_boat = $%d, ", paramCount)
+		params = append(params, *&cT.HasBoat)
+	}
+
+	if cT.WhichBoat != nil {
+		paramCount++
+		query += fmt.Sprintf("has_boat_which = $%d, ", paramCount)
+		params = append(params, *&cT.WhichBoat)
+	}
+
+	if len(params) == 0 {
+		return nil
+	}
+
+	//Remove the trailing comma and space from the query
+	query = query[:len(query)-2]
+
+	paramCount++
+	query += fmt.Sprintf(" WHERE id = $%d", paramCount)
+	params = append(params, id)
+
+	_, err := db.Exec(query, params...)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func UpdateNegotiation(id int, negT *models.CreateNegotiationRequest) error {

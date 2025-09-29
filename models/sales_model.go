@@ -21,8 +21,41 @@ type Customer struct {
 	City          *string `json:"city"`
 	Complement    *string `json:"complement"`
 	Qualified     *string `json:"qualified"`
+	QualifiedType *string `json:"qualified_type,omitempty"`
 	Active        *string `json:"active"`
 	ActiveContact *string `json:"active_contact"`
+
+	//Negotiation data, sometimes you might not need this and in others it might be null
+	EstimatedValue *float64 `json:"estimated_value"`
+	NewUsed        *string  `json:"new_used,omitempty"`
+	CustomerCity   *string  `json:"customer_city"`
+	NavigationCity *string  `json:"customer_nav_city,omitempty"`
+	BoatCapacity   *int16   `json:"boat_cap_needed,omitempty"`
+	CabinatedOpen  *string  `json:"cabinated_open,omitempty"`
+	MaxPesBoat     *string  `json:"boat_length_max"`
+	MinPesBoat     *string  `json:"boat_length_min"`
+}
+
+type CustomerRequest struct {
+	Name         *string `json:"Name" validate:"required"`
+	Email        *string `json:"Email" validate:"required"`
+	Phone        *string `json:"Phone" validate:"required"`
+	BirthDate    *string `json:"Birthdate"`
+	PfPj         *string `json:"PfPj" validate:"required"`
+	Cpf          *string `json:"Cpf" `
+	Cnpj         *string `json:"Cnpj"`
+	Cep          *string `json:"Cep" validate:"required"`
+	Street       *string `json:"Street" validate:"required"`
+	Neighborhood *string `json:"Neighborhood" validate:"required"`
+	City         *string `json:"City" validate:"required"`
+	Complement   *string `json:"Complement" validate:"required"`
+	State        *string `json:"State" validate:"required"`
+
+	Qualified     *string `json:"Qualified,omitempty" validate:"required"`
+	QualifiedType *string `json:"QualifiedType,omitempty"`
+
+	HasBoat   *string `json:"HasBoat,omitempty"`
+	WhichBoat *string `json:"WhichBoat,omitempty"`
 }
 
 type Negotiation struct {
@@ -89,13 +122,6 @@ type CreateNegotiationRequest struct {
 
 	UserId *int64 `json:"UserId" validate:"required"`
 }
-
-// acoForm = this.formBuilder.group({
-//     Description: ['', [Validators.required]],
-//     ComMeanName: ['', [Validators.required]],
-//     ComMeanId: ['', [Validators.required]],
-//     UserId: ['', []],
-// })
 
 type CreateNegotiationHistoryRequest struct {
 	Description *string `json:"Description" validate:"required"`

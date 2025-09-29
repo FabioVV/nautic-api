@@ -135,6 +135,9 @@ func main() {
 	salCustRoutes := salRoutes.Group("/customers")
 	salCustRoutes.Use(echojwt.WithConfig(configJwt))
 	salCustRoutes.Use(nmiddleware.CheckRoleAndPermissions)
+
+	salCustRoutes.GET("/:id", sales.GetCustomer)
+	salCustRoutes.PATCH("/:id", sales.UpdateCustomer)
 	salCustRoutes.GET("/:id/negotiations/history", sales.GetCustomerNegotiationsHistories)
 	/*SALES CUSTOMERS ROUTES*/
 	/*SALES ROUTES*/
