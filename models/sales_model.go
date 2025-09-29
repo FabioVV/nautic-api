@@ -50,6 +50,8 @@ type Negotiation struct {
 	Stage         int64  `json:"stage"`
 	Qualified     string `json:"qualified"`
 	QualifiedType string `json:"qualified_type"`
+
+	HasPassed24Hrs *bool `json:"has_passed_24hrs"`
 }
 
 type NegotiationHistory struct {

@@ -537,7 +537,8 @@ func GetNegotiations(search string, userId int) ([]models.Negotiation, int, erro
 			SB.new_used, 
 			SB.cab_open, 
 			SB.stage, 
-			C.qualified
+			C.qualified,
+			(SB.created_at < now() - interval '24 hours') AS has_passed_24hrs
 	FROM so_business AS SB
 
 	INNER JOIN customers AS C ON SB.id_customer = C.id
@@ -575,7 +576,7 @@ func GetNegotiations(search string, userId int) ([]models.Negotiation, int, erro
 		if err := rows.Scan(&curNeg.Id, &curNeg.CustomerId, &curNeg.MeanComId,
 			&curNeg.Name, &curNeg.Email, &curNeg.Phone, &curNeg.MeamComName,
 			&curNeg.BoatName, &curNeg.EstimatedValue, &curNeg.MaxEstimatedValue, &curNeg.City,
-			&curNeg.NavigationCity, &curNeg.BoatCapacityNeeded, &curNeg.NewUsed, &curNeg.CabOpen, &curNeg.Stage, &curNeg.Qualified); err != nil {
+			&curNeg.NavigationCity, &curNeg.BoatCapacityNeeded, &curNeg.NewUsed, &curNeg.CabOpen, &curNeg.Stage, &curNeg.Qualified, &curNeg.HasPassed24Hrs); err != nil {
 			return nil, 0, fmt.Errorf("scan error: %w", err)
 		}
 
