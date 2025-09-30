@@ -676,7 +676,7 @@ func GetCustomer(id int) (models.Customer, error) {
 	query := `SELECT C.id, C.id_user, C.id_mean_communication, U.name AS seller_name, MC.name,
 	C.name, C.email, C.phone, C.birthdate, C.pf_pj, 
 	C.cpf, C.cnpj, C.cep, C.street, C.neighborhood,
-	C.city, C.complement, C.qualified, C.active, C.active_contact,
+	C.city, C.state, C.complement, C.qualified, C.active, C.active_contact, C.suspect_of_fraud,
 	SB_LAST.estimated_value, SB_LAST.customer_city, SB_LAST.customer_navigation_city, SB_LAST.boat_capacity_needed,
 	SB_LAST.new_used, SB_LAST.cab_open, SB_LAST.boat_length_min, SB_LAST.boat_length_max
 
@@ -699,8 +699,8 @@ func GetCustomer(id int) (models.Customer, error) {
 		&curC.SellerName, &curC.MeamComName, &curC.Name,
 		&curC.Email, &curC.Phone, &curC.BirthDate, &curC.PfPj,
 		&curC.Cpf, &curC.Cnpj, &curC.Cep, &curC.Street, &curC.Neighborhood,
-		&curC.City, &curC.Complement, &curC.Qualified, &curC.Active,
-		&curC.ActiveContact, &curC.EstimatedValue, &curC.CustomerCity, &curC.NavigationCity,
+		&curC.City, &curC.State, &curC.Complement, &curC.Qualified, &curC.Active,
+		&curC.ActiveContact, &curC.SuspectOfFraud, &curC.EstimatedValue, &curC.CustomerCity, &curC.NavigationCity,
 		&curC.BoatCapacity, &curC.NewUsed, &curC.CabinatedOpen, &curC.MinPesBoat, &curC.MaxPesBoat); err != nil {
 		if err == sql.ErrNoRows {
 			return curC, echo.NewHTTPError(http.StatusNotFound, "Negotiation not found")
@@ -823,18 +823,6 @@ func UpdateCustomer(id int, cT *models.CustomerRequest) error {
 		params = append(params, *&cT.State)
 	}
 
-	if cT.Qualified != nil {
-		paramCount++
-		query += fmt.Sprintf("qualified = $%d, ", paramCount)
-		params = append(params, *&cT.Qualified)
-	}
-
-	if cT.QualifiedType != nil {
-		paramCount++
-		query += fmt.Sprintf("qualified_type = $%d, ", paramCount)
-		params = append(params, *&cT.QualifiedType)
-	}
-
 	if cT.City != nil {
 		paramCount++
 		query += fmt.Sprintf("city = $%d, ", paramCount)
@@ -851,6 +839,30 @@ func UpdateCustomer(id int, cT *models.CustomerRequest) error {
 		paramCount++
 		query += fmt.Sprintf("has_boat_which = $%d, ", paramCount)
 		params = append(params, *&cT.WhichBoat)
+	}
+
+	if cT.BirthDay != nil {
+		paramCount++
+		query += fmt.Sprintf("birthdate = $%d, ", paramCount)
+		params = append(params, *&cT.BirthDay)
+	}
+
+	if cT.PfPj != nil {
+		paramCount++
+		query += fmt.Sprintf("pf_pj = $%d, ", paramCount)
+		params = append(params, *&cT.PfPj)
+	}
+
+	if cT.Cpf != nil {
+		paramCount++
+		query += fmt.Sprintf("cpf = $%d, ", paramCount)
+		params = append(params, *&cT.Cpf)
+	}
+
+	if cT.Cnpj != nil {
+		paramCount++
+		query += fmt.Sprintf("cnpj = $%d, ", paramCount)
+		params = append(params, *&cT.Cnpj)
 	}
 
 	if len(params) == 0 {

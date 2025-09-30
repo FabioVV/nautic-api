@@ -3,27 +3,29 @@ package models
 import "time"
 
 type Customer struct {
-	Id            int64   `json:"id"`
-	UserId        int64   `json:"id_user"`
-	MeanComId     int32   `json:"id_mean_communication"`
-	SellerName    string  `json:"seller_name"`
-	MeamComName   string  `json:"com_name"`
-	Name          string  `json:"customer_name"`
-	Email         *string `json:"customer_email"`
-	Phone         *string `json:"customer_phone"`
-	BirthDate     *string `json:"birthdate"`
-	PfPj          *string `json:"pf_pj"`
-	Cpf           *string `json:"cpf"`
-	Cnpj          *string `json:"cnpj"`
-	Cep           *string `json:"cep"`
-	Street        *string `json:"street"`
-	Neighborhood  *string `json:"neighborhood"`
-	City          *string `json:"city"`
-	Complement    *string `json:"complement"`
-	Qualified     *string `json:"qualified"`
-	QualifiedType *string `json:"qualified_type,omitempty"`
-	Active        *string `json:"active"`
-	ActiveContact *string `json:"active_contact"`
+	Id             int64   `json:"id"`
+	UserId         int64   `json:"id_user"`
+	MeanComId      int32   `json:"id_mean_communication"`
+	SellerName     string  `json:"seller_name"`
+	MeamComName    string  `json:"com_name"`
+	Name           string  `json:"customer_name"`
+	Email          *string `json:"customer_email"`
+	Phone          *string `json:"customer_phone"`
+	BirthDate      *string `json:"birthdate"`
+	PfPj           *string `json:"pf_pj"`
+	Cpf            *string `json:"cpf"`
+	Cnpj           *string `json:"cnpj"`
+	Cep            *string `json:"cep"`
+	Street         *string `json:"street"`
+	Neighborhood   *string `json:"neighborhood"`
+	City           *string `json:"city"`
+	State          *string `json:"state"`
+	Complement     *string `json:"complement"`
+	Qualified      *string `json:"qualified"`
+	QualifiedType  *string `json:"qualified_type,omitempty"`
+	Active         *string `json:"active"`
+	ActiveContact  *string `json:"active_contact"`
+	SuspectOfFraud *string `json:"suspect_of_fraud"`
 
 	//Negotiation data, sometimes you might not need this and in others it might be null
 	EstimatedValue *float64 `json:"estimated_value"`
@@ -40,7 +42,7 @@ type CustomerRequest struct {
 	Name         *string `json:"Name" validate:"required"`
 	Email        *string `json:"Email" validate:"required"`
 	Phone        *string `json:"Phone" validate:"required"`
-	BirthDate    *string `json:"Birthdate"`
+	BirthDay     *string `json:"Birthday"`
 	PfPj         *string `json:"PfPj" validate:"required"`
 	Cpf          *string `json:"Cpf" `
 	Cnpj         *string `json:"Cnpj"`
@@ -50,9 +52,6 @@ type CustomerRequest struct {
 	City         *string `json:"City" validate:"required"`
 	Complement   *string `json:"Complement" validate:"required"`
 	State        *string `json:"State" validate:"required"`
-
-	Qualified     *string `json:"Qualified,omitempty" validate:"required"`
-	QualifiedType *string `json:"QualifiedType,omitempty"`
 
 	HasBoat   *string `json:"HasBoat,omitempty"`
 	WhichBoat *string `json:"WhichBoat,omitempty"`
