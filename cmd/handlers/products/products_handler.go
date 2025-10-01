@@ -169,6 +169,52 @@ func DeactivateEngine(c echo.Context) error {
 	})
 }
 
+func GetBoat(c echo.Context) error {
+	idParam := c.Param("id")
+
+	bID, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	acc, err := repositories.GetBoat(bID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"data": acc,
+	})
+}
+
+func UpdateBoat(c echo.Context) error {
+	idParam := c.Param("id")
+
+	cT := new(models.BoatRequest)
+
+	if err := c.Bind(cT); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request payload"+err.Error())
+	}
+
+	if err := c.Validate(cT); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
+	}
+
+	accTID, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	err = repositories.UpdateBoat(accTID, cT)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Boat updated successfully",
+	})
+}
+
 func InsertBoat(c echo.Context) error {
 	boat := new(models.CreateBoatRequest)
 

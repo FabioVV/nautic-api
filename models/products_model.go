@@ -8,26 +8,46 @@ type CreateBoatRequest struct {
 }
 
 type Boat struct {
-	Id               int64     `json:"id"`
-	Model            string    `json:"model"`
-	PriceSell        *float64  `json:"selling_price"`
-	Cost             *float64  `json:"cost"`
-	Itens            *string   `json:"itens"`
-	Hours            *string   `json:"hours"`
-	Year             *string   `json:"year"`
-	NewUsed          *string   `json:"new_used"`
-	CabOpen          *string   `json:"cab_open"`
-	Capacity         *string   `json:"capacity"`
-	NightCapacity    *int      `json:"night_capacity"`
-	Length           *float64  `json:"lenght"`
-	Beam             *float64  `json:"beam"`
-	Draft            *float64  `json:"draft"`
-	Weight           *float64  `json:"weight"`
-	Trim             *float64  `json:"trim"`
-	FuelTankCapactiy *float64  `json:"fuel_tank_capacity"`
-	Active           string    `json:"active"`
-	CreatedAt        time.Time `json:"created_at"`
-	UpdatedAt        time.Time `json:"updated_at"`
+	Id               int64    `json:"id"`
+	Model            string   `json:"model"`
+	PriceSell        *float64 `json:"selling_price"`
+	Cost             *float64 `json:"cost"`
+	Itens            *string  `json:"itens"`
+	Hours            *string  `json:"hours"`
+	Year             *string  `json:"year"`
+	NewUsed          *string  `json:"new_used"`
+	CabOpen          *string  `json:"cab_open"`
+	Capacity         *string  `json:"capacity"`
+	NightCapacity    *int     `json:"night_capacity"`
+	Length           *float64 `json:"lenght"`
+	Beam             *float64 `json:"beam"`
+	Draft            *float64 `json:"draft"`
+	Weight           *float64 `json:"weight"`
+	Trim             *float64 `json:"trim"`
+	FuelTankCapactiy *float64 `json:"fuel_tank_capacity"`
+	Active           string   `json:"active"`
+
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type BoatRequest struct {
+	Model            *string  `json:"Model" validate:"required"`
+	PriceSell        *float64 `json:"SellingPrice"`
+	Cost             *float64 `json:"Cost"`
+	Itens            *string  `json:"Itens"`
+	Hours            *string  `json:"Hours"`
+	Year             *string  `json:"Year" validate:"required"`
+	NewUsed          *string  `json:"NewUsed"`
+	CabOpen          *string  `json:"CabinatedOpen"`
+	Capacity         *int     `json:"Capacity"`
+	NightCapacity    *int     `json:"NightCapacity"`
+	Length           *float64 `json:"Length"`
+	Beam             *float64 `json:"Beam"`
+	Draft            *float64 `json:"Draft"`
+	Weight           *float64 `json:"Weight"`
+	Trim             *float64 `json:"Trim"`
+	FuelTankCapactiy *float64 `json:"FuelTankCapacity"`
 }
 
 type Accessory struct {

@@ -80,7 +80,6 @@ func main() {
 	enginesRoutes.DELETE("/:id", products.DeactivateEngine)
 	enginesRoutes.GET("/:id", products.GetEngine)
 	enginesRoutes.PATCH("/:id", products.UpdateEngine)
-
 	/*ENGINES ROUTES*/
 
 	/*ACCESSORIES ROUTES*/
@@ -108,6 +107,9 @@ func main() {
 
 	boatsRoutes.GET("", products.GetBoats)
 	boatsRoutes.POST("", products.InsertBoat)
+	boatsRoutes.GET("/:id", products.GetBoat)
+	boatsRoutes.PATCH("/:id", products.UpdateBoat)
+
 	/*BOATS ROUTES*/
 
 	/*SALES ROUTES*/
