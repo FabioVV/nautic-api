@@ -110,6 +110,15 @@ func main() {
 	boatsRoutes.GET("/:id", products.GetBoat)
 	boatsRoutes.PATCH("/:id", products.UpdateBoat)
 
+	boatsRoutes.POST("/:id/accessories/:id_acc", products.InsertBoatAccessory)
+	boatsRoutes.POST("/:id/engines/:id_eng", products.InsertBoatEngine)
+
+	boatsRoutes.DELETE("/:id/accessories/:id_acc", products.RemoveBoatAccessory)
+	boatsRoutes.DELETE("/:id/engines/:id_eng", products.RemoveBoatEngine)
+
+	boatsRoutes.GET("/:id/accessories", products.GetBoatAccessories)
+	boatsRoutes.GET("/:id/engines", products.GetBoatEngines)
+
 	/*BOATS ROUTES*/
 
 	/*SALES ROUTES*/

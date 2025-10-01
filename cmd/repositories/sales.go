@@ -865,6 +865,12 @@ func UpdateCustomer(id int, cT *models.CustomerRequest) error {
 		params = append(params, *&cT.Cnpj)
 	}
 
+	if cT.SuspectOfFraud != nil {
+		paramCount++
+		query += fmt.Sprintf("suspect_of_fraud = $%d, ", paramCount)
+		params = append(params, *&cT.SuspectOfFraud)
+	}
+
 	if len(params) == 0 {
 		return nil
 	}

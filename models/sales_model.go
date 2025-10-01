@@ -39,19 +39,20 @@ type Customer struct {
 }
 
 type CustomerRequest struct {
-	Name         *string    `json:"Name" validate:"required"`
-	Email        *string    `json:"Email" validate:"required"`
-	Phone        *string    `json:"Phone" validate:"required"`
-	BirthDay     *time.Time `json:"Birthday"`
-	PfPj         *string    `json:"PfPj" validate:"required"`
-	Cpf          *string    `json:"Cpf" `
-	Cnpj         *string    `json:"Cnpj"`
-	Cep          *string    `json:"Cep" validate:"required"`
-	Street       *string    `json:"Street" validate:"required"`
-	Neighborhood *string    `json:"Neighborhood" validate:"required"`
-	City         *string    `json:"City" validate:"required"`
-	Complement   *string    `json:"Complement" validate:"required"`
-	State        *string    `json:"State" validate:"required"`
+	Name           *string    `json:"Name" validate:"required"`
+	Email          *string    `json:"Email" validate:"required"`
+	Phone          *string    `json:"Phone" validate:"required"`
+	BirthDay       *time.Time `json:"Birthday"`
+	PfPj           *string    `json:"PfPj" validate:"required"`
+	Cpf            *string    `json:"Cpf" `
+	Cnpj           *string    `json:"Cnpj"`
+	Cep            *string    `json:"Cep" validate:"required"`
+	Street         *string    `json:"Street" validate:"required"`
+	Neighborhood   *string    `json:"Neighborhood" validate:"required"`
+	City           *string    `json:"City" validate:"required"`
+	Complement     *string    `json:"Complement" validate:"required"`
+	State          *string    `json:"State" validate:"required"`
+	SuspectOfFraud *string    `json:"FraudSuspect"`
 
 	HasBoat   *string `json:"HasBoat,omitempty"`
 	WhichBoat *string `json:"WhichBoat,omitempty"`

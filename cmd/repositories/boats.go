@@ -25,6 +25,78 @@ func InsertBoat(acc *models.CreateBoatRequest) error {
 	return nil
 }
 
+func GetBoatEngines() ([]models.Engine, error) {
+	db := storage.GetDB()
+	var engs []models.Engine
+
+	query := `
+	SELECT E.id, E.model, E.type, E.weight, E.rotation, E.power, E.cylinders, E.selling_price, E.command, E.clocks, E.tempo, E.fuel_type, E.active, E.created_at, E.updated_at, E.propulsion
+
+	FROM boat_engines AS BE
+	INNER JOIN engines AS E ON BE.id_engine = E.id
+
+	ORDER BY BE.id
+	`
+
+	rows, err := db.Query(query)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return engs, echo.NewHTTPError(http.StatusNotFound, "Boats accessories not found")
+		}
+		return engs, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve boats accessories")
+	}
+
+	for rows.Next() {
+		var curAcc models.Engine
+		rows.Scan(&curAcc.Id, &curAcc.Model, &curAcc.Type, &curAcc.Weight, &curAcc.Rotation, &curAcc.Power, &curAcc.Cylinders,
+			&curAcc.PriceSell, &curAcc.Command, &curAcc.Clocks, &curAcc.Tempo, &curAcc.FuelType, &curAcc.Active, &curAcc.CreatedAt, &curAcc.UpdatedAt, &curAcc.Propulsion)
+		engs = append(engs, curAcc)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows error: %w", err)
+	}
+
+	return engs, nil
+}
+
+func GetBoatAccessories() ([]models.Accessory, error) {
+	db := storage.GetDB()
+	var accs []models.Accessory
+
+	query := `
+	SELECT A.id, A.model, A.details, A.price_buy, A.price_sell, A.created_at, A.updated_at, A.active, AT.type
+
+	FROM boat_accessories AS BA
+	INNER JOIN accessories AS A ON BA.id_accessory = A.id
+	INNER JOIN accessory_types AS AT ON A.id_accessory_type = AT.id
+
+	ORDER BY BA.id
+	`
+
+	rows, err := db.Query(query)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return accs, echo.NewHTTPError(http.StatusNotFound, "Boats accessories not found")
+		}
+		return accs, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve boats accessories")
+	}
+
+	for rows.Next() {
+		var curAcc models.Accessory
+		rows.Scan(&curAcc.Id, &curAcc.Model, &curAcc.Details, &curAcc.PriceBuy, &curAcc.PriceSell, &curAcc.CreatedAt, &curAcc.UpdatedAt, &curAcc.Active, &curAcc.Type)
+		accs = append(accs, curAcc)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows error: %w", err)
+	}
+
+	return accs, nil
+}
+
 func GetBoats(pagenum string, limitPerPage string, model string, price string, id string, active string) ([]models.Boat, int, error) {
 	db := storage.GetDB()
 
@@ -149,6 +221,88 @@ func GetBoat(id int) (models.Boat, error) {
 	}
 
 	return curBoat, nil
+}
+
+func RemoveBoatAccessory(id int, id_acc int) error {
+	db := storage.GetDB()
+
+	_, err := GetAccessory(id_acc)
+	if err != nil {
+		return err
+	}
+
+	query := `DELETE FROM boat_accessories WHERE id_accessory = $1 AND id_boat = $2`
+
+	_, err = db.Exec(query, id_acc, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func RemoveBoatEngine(id int, id_eng int) error {
+	db := storage.GetDB()
+
+	_, err := GetEngine(id_eng)
+	if err != nil {
+		return err
+	}
+
+	query := `DELETE FROM boat_engines WHERE id_engine = $1 AND id_boat = $2`
+
+	_, err = db.Exec(query, id_eng, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func InsertEngineAccessory(id int, id_eng int) error {
+	db := storage.GetDB()
+
+	var exists bool
+	checkQuery := `SELECT EXISTS(SELECT 1 FROM boat_engines WHERE id_boat = $1 AND id_engine = $2)`
+	if err := db.QueryRow(checkQuery, id, id_eng).Scan(&exists); err != nil {
+		return err
+	}
+
+	if exists {
+		return echo.NewHTTPError(http.StatusBadRequest, "engine already linked with the boat")
+	}
+
+	query := "INSERT INTO boat_engines (id_boat, id_engine) VALUES ($1, $2)"
+
+	_, err := db.Exec(query, id, id_eng)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func InsertBoatAccessory(id int, id_acc int) error {
+	db := storage.GetDB()
+
+	var exists bool
+	checkQuery := `SELECT EXISTS(SELECT 1 FROM boat_accessories WHERE id_boat = $1 AND id_accessory = $2)`
+	if err := db.QueryRow(checkQuery, id, id_acc).Scan(&exists); err != nil {
+		return err
+	}
+
+	if exists {
+		return echo.NewHTTPError(http.StatusBadRequest, "accessory already linked with the boat")
+	}
+
+	query := "INSERT INTO boat_accessories (id_boat, id_accessory) VALUES ($1, $2)"
+
+	_, err := db.Exec(query, id, id_acc)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func UpdateBoat(id int, cT *models.BoatRequest) error {

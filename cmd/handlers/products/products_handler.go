@@ -169,6 +169,102 @@ func DeactivateEngine(c echo.Context) error {
 	})
 }
 
+func InsertBoatEngine(c echo.Context) error {
+	idParamBoat := c.Param("id")
+	idParamEng := c.Param("id_eng")
+
+	boatID, err := strconv.Atoi(idParamBoat)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	engID, err := strconv.Atoi(idParamEng)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	err = repositories.InsertEngineAccessory(boatID, engID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusCreated, echo.Map{
+		"message": "Engine successfully added",
+	})
+}
+
+func RemoveBoatEngine(c echo.Context) error {
+	idParam := c.Param("id")
+	idParamEng := c.Param("id_eng")
+
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	id_eng, err := strconv.Atoi(idParamEng)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	err = repositories.RemoveBoatEngine(id, id_eng)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusNoContent, echo.Map{
+		"message": "Boat engine successfully removed",
+	})
+}
+
+func RemoveBoatAccessory(c echo.Context) error {
+	idParam := c.Param("id")
+	idParamAcc := c.Param("id_acc")
+
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	id_acc, err := strconv.Atoi(idParamAcc)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	err = repositories.RemoveBoatAccessory(id, id_acc)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusNoContent, echo.Map{
+		"message": "Boat accessory successfully removed",
+	})
+}
+
+func InsertBoatAccessory(c echo.Context) error {
+	idParamBoat := c.Param("id")
+	idParamAcc := c.Param("id_acc")
+
+	boatID, err := strconv.Atoi(idParamBoat)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	accID, err := strconv.Atoi(idParamAcc)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	err = repositories.InsertBoatAccessory(boatID, accID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusCreated, echo.Map{
+		"message": "Accessory successfully added",
+	})
+}
+
 func GetBoat(c echo.Context) error {
 	idParam := c.Param("id")
 
@@ -272,6 +368,28 @@ func InsertAccessory(c echo.Context) error {
 
 	return c.JSON(http.StatusCreated, echo.Map{
 		"message": "accessory type created successfully",
+	})
+}
+
+func GetBoatEngines(c echo.Context) error {
+	boats, err := repositories.GetBoatEngines()
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"data": boats,
+	})
+}
+
+func GetBoatAccessories(c echo.Context) error {
+	boats, err := repositories.GetBoatAccessories()
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"data": boats,
 	})
 }
 
