@@ -137,9 +137,6 @@ func InsertNegotiation(neg *models.CreateNegotiationRequest) error {
 
 	_, err = db.Exec(query, customerID, neg.ComMeanId, neg.BoatName, neg.EstimatedValue, neg.Qualified, neg.QualifiedType)
 	if err != nil {
-		// if _, ok := utils.CheckForError("unique_type", err); ok {
-		// 	return echo.NewHTTPError(http.StatusBadRequest, echo.Map{"errors": echo.Map{"type": "Mean already exists"}})
-		// }
 		return err
 	}
 
@@ -1022,6 +1019,50 @@ func UpdateNegotiation(id int, negT *models.CreateNegotiationRequest) error {
 	params = append(params, id)
 
 	_, err := db.Exec(query, params...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func UpdateNegotiationAdvanceStage(id int, id_user int, negT *models.AdvanceNegotiationRequest) error {
+	db := storage.GetDB()
+
+	query := `UPDATE so_business SET `
+	params := []interface{}{}
+	paramCount := 0
+
+	if *negT.NewStage > 5 || *negT.NewStage < 1 {
+		return echo.NewHTTPError(http.StatusInternalServerError, "New stage value not allowed")
+	}
+
+	if negT.NewStage != nil && negT.CurrentStage != nil {
+		paramCount++
+		query += fmt.Sprintf("stage = $%d, stage_last_updated_at = CURRENT_TIMESTAMP", paramCount)
+		params = append(params, *&negT.NewStage)
+	}
+
+	if len(params) == 0 {
+		return nil
+	}
+
+	paramCount++
+	query += fmt.Sprintf(" WHERE id = $%d", paramCount)
+	params = append(params, id)
+
+	_, err := db.Exec(query, params...)
+	if err != nil {
+		return err
+	}
+
+	var id_customer *int = nil
+	query = `SELECT id_customer FROM so_business WHERE id = $1`
+	db.QueryRow(query, id).Scan(&id_customer)
+
+	query = "INSERT INTO business_histories (id_user, id_customer, description, stage, id_mean_communication, id_business) VALUES ($1, $2, $3, $4, $5, $6)"
+
+	_, err = db.Exec(query, id_user, id_customer, "AVANÇO DE FUNIL", negT.NewStage, 4, id)
 	if err != nil {
 		return err
 	}

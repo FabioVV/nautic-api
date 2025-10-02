@@ -359,3 +359,36 @@ func UpdateNegotiation(c echo.Context) error {
 		"message": "Negotiation updated successfully",
 	})
 }
+
+func UpdateNegotiationAdvanceStage(c echo.Context) error {
+	idParam := c.Param("id")
+
+	negT := new(models.AdvanceNegotiationRequest)
+
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	if err := c.Bind(negT); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request payload")
+	}
+
+	if err := c.Validate(negT); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
+	}
+
+	negID, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	err = repositories.UpdateNegotiationAdvanceStage(negID, claims.Id, negT)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Negotiation updated successfully",
+	})
+}

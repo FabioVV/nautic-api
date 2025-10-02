@@ -125,6 +125,11 @@ type CreateNegotiationRequest struct {
 	UserId *int64 `json:"UserId" validate:"required"`
 }
 
+type AdvanceNegotiationRequest struct {
+	CurrentStage *int `json:"current_stage" validate:"required"`
+	NewStage     *int `json:"new_stage" validate:"required"`
+}
+
 type CreateNegotiationHistoryRequest struct {
 	Description *string `json:"Description" validate:"required"`
 	ComMeanId   *int64  `json:"ComMeanId" validate:"required"`

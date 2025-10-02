@@ -135,6 +135,7 @@ func main() {
 	salRoutes.GET("/negotiations", sales.GetNegotiations)
 	salRoutes.POST("/negotiations", sales.InsertNegotiation)
 	salRoutes.PATCH("/negotiations/:id", sales.UpdateNegotiation)
+	salRoutes.PATCH("/negotiations/:id/advance", sales.UpdateNegotiationAdvanceStage)
 
 	salRoutes.POST("/negotiations/:id/history", sales.InsertNegotiationHistory)
 	salRoutes.GET("/negotiations/:id/history", sales.GetNegotiationHistory)
