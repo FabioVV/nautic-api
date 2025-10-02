@@ -85,6 +85,7 @@ type Negotiation struct {
 	QualifiedType string `json:"qualified_type"`
 
 	HasPassed24Hrs *bool `json:"has_passed_24hrs"`
+	CustomerScore  *int  `json:"customer_score"`
 }
 
 type NegotiationHistory struct {

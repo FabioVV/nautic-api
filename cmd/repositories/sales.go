@@ -556,11 +556,55 @@ func GetNegotiations(search string, userId int) ([]models.Negotiation, int, erro
 			SB.cab_open, 
 			SB.stage, 
 			C.qualified,
-			(SB.created_at < now() - interval '24 hours') AS has_passed_24hrs
+			(SB.created_at < now() - interval '24 hours') AS has_passed_24hrs,
+			-- score calculation
+			(
+			-- base 0
+			COALESCE(
+			-- has boat: +100
+			CASE WHEN SB.has_boat = 'Y' OR SB.has_boat = 'S' THEN 200 ELSE 0 END
+			-- suspect of fraud: -1000
+			+ CASE WHEN C.suspect_of_fraud = 'Y' THEN -1000 ELSE 0 END
+			-- willing to spend a lot: +100 (assume estimated_value threshold)
+			+ CASE WHEN SB.estimated_value IS NOT NULL AND SB.estimated_value >= 300000 THEN 200 ELSE 0 END
+			-- slow to return contact: -100 (assume last history older than 7 days)
+			+ CASE
+			WHEN bh.last_history_at IS NULL THEN -100
+			WHEN now() - bh.last_history_at > interval '7 days' THEN -500
+			ELSE 0
+			END
+			+ CASE
+			WHEN now() - SB.stage_last_updated_at > interval '7 days' THEN -500
+			WHEN now() - SB.stage_last_updated_at > interval '5 days' THEN -300
+			WHEN now() - SB.stage_last_updated_at > interval '3 days' THEN -100
+			WHEN now() - SB.stage_last_updated_at > interval '1 days' OR now() - SB.stage_last_updated_at > interval '2 days' THEN 100
+			ELSE 0
+			END
+			+ CASE WHEN C.qualified = 'Y' THEN 300 ELSE -100 END
+			+ CASE WHEN C.qualified = 'Y' AND C.qualified_type = 'A' THEN 300 ELSE 0 END
+			+ CASE WHEN C.qualified = 'Y' AND C.qualified_type = 'B' THEN 200 ELSE 0 END
+			+ CASE WHEN C.qualified = 'Y' AND C.qualified_type = 'C' THEN 100 ELSE 0 END
+
+			+ CASE WHEN SB.stage = 1 THEN 100 ELSE 0 END
+			+ CASE WHEN SB.stage = 2 THEN 100 ELSE 0 END
+			+ CASE WHEN SB.stage = 3 THEN 200 ELSE 0 END
+			+ CASE WHEN SB.stage = 4 THEN 300 ELSE 0 END
+
+			,0)
+			) AS customer_score
+
+
 	FROM so_business AS SB
 
 	INNER JOIN customers AS C ON SB.id_customer = C.id
 	INNER JOIN mean_communication AS MC ON SB.id_mean_communication = MC.id
+	LEFT JOIN (
+		-- last business_histories.created_at per business (id_business links to so_business.id)
+		SELECT id_business,
+		max(created_at) AS last_history_at
+		FROM public.business_histories
+		GROUP BY id_business
+	) bh ON bh.id_business = SB.id
 
 	%s
 	ORDER BY SB.id
@@ -594,7 +638,8 @@ func GetNegotiations(search string, userId int) ([]models.Negotiation, int, erro
 		if err := rows.Scan(&curNeg.Id, &curNeg.CustomerId, &curNeg.MeanComId,
 			&curNeg.Name, &curNeg.Email, &curNeg.Phone, &curNeg.MeamComName,
 			&curNeg.BoatName, &curNeg.EstimatedValue, &curNeg.MaxEstimatedValue, &curNeg.City,
-			&curNeg.NavigationCity, &curNeg.BoatCapacityNeeded, &curNeg.NewUsed, &curNeg.CabOpen, &curNeg.Stage, &curNeg.Qualified, &curNeg.HasPassed24Hrs); err != nil {
+			&curNeg.NavigationCity, &curNeg.BoatCapacityNeeded, &curNeg.NewUsed, &curNeg.CabOpen, &curNeg.Stage,
+			&curNeg.Qualified, &curNeg.HasPassed24Hrs, &curNeg.CustomerScore); err != nil {
 			return nil, 0, fmt.Errorf("scan error: %w", err)
 		}
 
