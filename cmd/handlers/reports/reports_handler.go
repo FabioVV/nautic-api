@@ -24,3 +24,21 @@ func GetNegotiationsReport(c echo.Context) error {
 		"totalRecords": numRecords,
 	})
 }
+
+func GetSalesOrdersReport(c echo.Context) error {
+
+	qpage := c.QueryParams().Get("pageNumber")
+	qperpage := c.QueryParams().Get("perPage")
+	qname := c.QueryParams().Get("name")
+	qpboat := c.QueryParams().Get("boat")
+
+	data, numRecords, err := repositories.GetSalesOrdersReport(qpage, qperpage, qname, qpboat)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"data":         data,
+		"totalRecords": numRecords,
+	})
+}

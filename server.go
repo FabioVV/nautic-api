@@ -169,6 +169,7 @@ func main() {
 	salReps.Use(echojwt.WithConfig(configJwt))
 	salReps.Use(nmiddleware.CheckRoleAndPermissions)
 	salReps.GET("/negotiations", reports.GetNegotiationsReport)
+	salReps.GET("/sales-orders", reports.GetSalesOrdersReport)
 
 	/*SALES REPORTS ROUTES*/
 

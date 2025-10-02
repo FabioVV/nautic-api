@@ -69,7 +69,7 @@ func GetNegotiationsReport(pagenum string, limitPerPage string, name string, boa
 		SB.boat_name,
 		SB.estimated_value,
 		SB.stage,
-		
+
 		-- days since stage_last_updated_at (integer days)
 		DATE_PART('day', NOW() - SB.stage_last_updated_at)::bigint AS days_since_stage_change,
 
@@ -134,6 +134,106 @@ func GetNegotiationsReport(pagenum string, limitPerPage string, name string, boa
 		if err := rows.Scan(&curNeg.Id, &curNeg.CustomerId, &curNeg.MeanComId,
 			&curNeg.Name, &curNeg.Email, &curNeg.Phone, &curNeg.MeamComName,
 			&curNeg.BoatName, &curNeg.EstimatedValue, &curNeg.Stage, &curNeg.DaysSinceStageChange, &curNeg.LastHistoryAt, &curNeg.DaysSinceLastHistory); err != nil {
+			return nil, 0, fmt.Errorf("scan error: %w", err)
+		}
+
+		negs = append(negs, curNeg)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("rows error: %w", err)
+	}
+
+	return negs, numRecords, nil
+}
+
+func GetSalesOrdersReport(pagenum string, limitPerPage string, name string, boat string) ([]models.SalesOrdersReport, int, error) {
+	db := storage.GetDB()
+
+	var negs []models.SalesOrdersReport
+
+	pagenumber, err := strconv.Atoi(pagenum)
+	if err != nil {
+		return nil, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve report (PG1)")
+	}
+	limit, err := strconv.Atoi(limitPerPage)
+	if err != nil {
+		return nil, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve report (PG2)")
+	}
+
+	offset := (pagenumber - 1) * limit
+
+	conds := []string{}
+	args := []interface{}{}
+	paramCount := 1
+
+	if name != "" {
+		conds = append(conds, fmt.Sprintf("C.name ILIKE $%d", paramCount))
+		args = append(args, "%"+name+"%")
+		paramCount++
+	}
+
+	if boat != "" {
+		conds = append(conds, fmt.Sprintf("C.boat_name ILIKE $%d", paramCount))
+		args = append(args, "%"+boat+"%")
+		paramCount++
+	}
+
+	where := ""
+	if len(conds) > 0 {
+		where = "WHERE " + strings.Join(conds, " AND ")
+	}
+
+	args = append(args, limitPerPage, offset)
+	limitArgPos := paramCount
+	offsetArgPos := paramCount + 1
+
+	query := fmt.Sprintf(`
+		SELECT SO.id, BH.id_customer, BH.id_user, BH.id, C.name, U.name, 
+		SO.status, SO.done, SO.discounted_amount, SO.total_value, SO.created_at, SO.updated_at, SO.delivery_at
+
+		FROM sales_orders AS SO
+
+		INNER JOIN business_histories AS BH ON SO.id_business_history = BH.id
+		INNER JOIN customers AS C ON BH.id_customer = C.id
+		INNER JOIN users AS U ON BH.id_user = U.id
+
+	%s
+	ORDER BY SO.id
+	LIMIT $%d OFFSET $%d
+	`, where, limitArgPos, offsetArgPos)
+
+	rows, err := db.Query(query, args...)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return negs, 0, echo.NewHTTPError(http.StatusNotFound, "Sales orders not found")
+		}
+		return negs, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve sales orders")
+	}
+
+	queryTotalRecords := fmt.Sprintf(`
+	SELECT COUNT(1)
+
+		FROM sales_orders AS SO
+
+		INNER JOIN business_histories AS BH ON SO.id_business_history = BH.id
+		INNER JOIN customers AS C ON BH.id_customer = C.id
+		INNER JOIN users AS U ON BH.id_user = U.id
+		%s
+	`, where)
+	//println(queryTotalRecords)
+
+	rowsCount := db.QueryRow(queryTotalRecords, args...)
+	numRecords := 0
+	rowsCount.Scan(&numRecords)
+
+	for rows.Next() {
+		var curNeg models.SalesOrdersReport
+
+		if err := rows.Scan(&curNeg.Id, &curNeg.CustomerId, &curNeg.UserId,
+			&curNeg.BusinessHistoryId, &curNeg.CustomerName, &curNeg.SellerName, &curNeg.Status, &curNeg.Done,
+			&curNeg.DiscountedAmount, &curNeg.TotalValue, &curNeg.CreatedAt, &curNeg.UpdatedAt, &curNeg.DeliveryAt); err != nil {
 			return nil, 0, fmt.Errorf("scan error: %w", err)
 		}
 

@@ -18,3 +18,21 @@ type NegotiationReport struct {
 	LastHistoryAt        *time.Time `json:"last_history_at"`
 	DaysSinceLastHistory *int       `json:"days_since_last_history"`
 }
+
+type SalesOrdersReport struct {
+	Id                *int64 `json:"id"`
+	CustomerId        *int64 `json:"id_customer"`
+	UserId            *int64 `json:"id_user"`
+	BusinessHistoryId *int64 `json:"id_business_history"`
+
+	CustomerName *string `json:"customer_name"`
+	SellerName   *string `json:"seller_name"`
+
+	Status           *string    `json:"status"`
+	Done             *string    `json:"done"`
+	DiscountedAmount *float64   `json:"discounted_amount" `
+	TotalValue       *float64   `json:"total_value"`
+	CreatedAt        *time.Time `json:"created_at"`
+	UpdatedAt        *time.Time `json:"updated_at"`
+	DeliveryAt       *time.Time `json:"delivery_at"`
+}
