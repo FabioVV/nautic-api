@@ -139,18 +139,27 @@ func main() {
 	salRoutes.POST("/negotiations/:id/history", sales.InsertNegotiationHistory)
 	salRoutes.GET("/negotiations/:id/history", sales.GetNegotiationHistory)
 
-	salRoutes.GET("/customers", sales.GetCustomers)
-	salRoutes.GET("/customers-birthday", sales.GetCustomersBirthday)
+	/*SALES ORDERS ROUTES*/
+	salOrdRoutes := salRoutes.Group("/orders")
+	salOrdRoutes.Use(echojwt.WithConfig(configJwt))
+	salOrdRoutes.Use(nmiddleware.CheckRoleAndPermissions)
+	salOrdRoutes.POST("/negotiations/history/:id", sales.InsertSalesOrder)
+
+	/*SALES ORDERS ROUTES*/
 
 	/*SALES CUSTOMERS ROUTES*/
 	salCustRoutes := salRoutes.Group("/customers")
 	salCustRoutes.Use(echojwt.WithConfig(configJwt))
 	salCustRoutes.Use(nmiddleware.CheckRoleAndPermissions)
 
+	salCustRoutes.GET("", sales.GetCustomers)
+	salCustRoutes.GET("/birthdays", sales.GetCustomersBirthday)
+
 	salCustRoutes.GET("/:id", sales.GetCustomer)
 	salCustRoutes.PATCH("/:id", sales.UpdateCustomer)
 	salCustRoutes.GET("/:id/negotiations/history", sales.GetCustomerNegotiationsHistories)
 	/*SALES CUSTOMERS ROUTES*/
+
 	/*SALES ROUTES*/
 
 	e.Logger.Fatal(e.Start(":8080"))

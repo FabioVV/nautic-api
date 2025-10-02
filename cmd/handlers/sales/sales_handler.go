@@ -210,6 +210,23 @@ func DeactivateComMeans(c echo.Context) error {
 	})
 }
 
+func InsertSalesOrder(c echo.Context) error {
+	idParam := c.Param("id")
+
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	if err := repositories.InsertSalesOrderUsingBusinessHistory(id); err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusCreated, echo.Map{
+		"message": "sales order created successfully",
+	})
+}
+
 func InsertComMeans(c echo.Context) error {
 	accT := new(models.CreateCommunicationMeanRequest)
 

@@ -90,6 +90,19 @@ func GetComMean(id int) (models.CommunicationMean, error) {
 	return mc, nil
 }
 
+func InsertSalesOrderUsingBusinessHistory(idBusinessHistory int) error {
+	db := storage.GetDB()
+
+	query := "INSERT INTO sales_orders (id_business_history) VALUES ($1)"
+
+	_, err := db.Exec(query, idBusinessHistory)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func InsertComMeans(mcR *models.CreateCommunicationMeanRequest) error {
 	db := storage.GetDB()
 
@@ -416,7 +429,7 @@ func GetComMeans(pagenum string, limitPerPage string, name string, active string
 	return accs, numRecords, nil
 }
 
-func GetNegotiationHistory(id_business int, id_user int) ([]models.NegotiationHistory, int, error) {
+func GetNegotiationHistory(id_business int, id_user int) ([]models.NegotiationHistory, int, error) { // aa
 	db := storage.GetDB()
 
 	var negsh []models.NegotiationHistory
@@ -432,7 +445,13 @@ func GetNegotiationHistory(id_business int, id_user int) ([]models.NegotiationHi
 	query := `
 	SELECT BIH.id, BIH.id_user, BIH.id_customer, BIH.id_mean_communication, 
 	BIH.description, BIH.stage, BIH.created_at,
-	C.name, MC.name
+	C.name, MC.name, BIH.id_business, SB.negotiation_active,
+	EXISTS (
+        SELECT 1
+        FROM sales_orders as SO
+        WHERE SO.id_business_history = BIH.id 
+    ) AS has_sales_order
+
 
 	FROM business_histories AS BIH
 
@@ -451,7 +470,7 @@ func GetNegotiationHistory(id_business int, id_user int) ([]models.NegotiationHi
 		if err == sql.ErrNoRows {
 			return negsh, 0, echo.NewHTTPError(http.StatusNotFound, "Negotiations not found")
 		}
-		return negsh, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve negotiations"+err.Error())
+		return negsh, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve negotiations")
 	}
 
 	queryTotalRecords := `
@@ -477,12 +496,8 @@ func GetNegotiationHistory(id_business int, id_user int) ([]models.NegotiationHi
 	for rows.Next() {
 		var curNegH models.NegotiationHistory
 
-		// 		SELECT BIH.id, BIH.id_user, BIH.id_customer, BIH.id_mean_communication,
-		// BIH.description, BIH.stage, BIH.created_at,
-		// C.name, MC.name
-
 		if err := rows.Scan(&curNegH.Id, &curNegH.UserId, &curNegH.CustomerId, &curNegH.ComMeanId,
-			&curNegH.Description, &curNegH.Stage, &curNegH.DateCreated, &curNegH.CustomerName, &curNegH.MeamComName); err != nil {
+			&curNegH.Description, &curNegH.Stage, &curNegH.DateCreated, &curNegH.CustomerName, &curNegH.MeamComName, &curNegH.BusinessId, &curNegH.NegotiationActive, &curNegH.HasSalesOrder); err != nil {
 			return nil, 0, fmt.Errorf("scan error: %w", err)
 		}
 
@@ -605,7 +620,12 @@ func GetCustomerNegotiationsHistories(customerId int) ([]models.NegotiationHisto
 
 	query := `
 	SELECT BIH.id, BIH.id_user, BIH.id_customer, BIH.id_mean_communication, 
-	BIH.description, BIH.stage, BIH.created_at, BIH.id_business, C.name, MC.name
+	BIH.description, BIH.stage, BIH.created_at, BIH.id_business, C.name, MC.name, SB.negotiation_active,
+	EXISTS (
+        SELECT 1
+        FROM sales_orders as SO
+        WHERE SO.id_business_history = BIH.id 
+    ) AS has_sales_order
 
 	FROM business_histories AS BIH
 
@@ -655,7 +675,7 @@ func GetCustomerNegotiationsHistories(customerId int) ([]models.NegotiationHisto
 		// C.name, MC.name
 
 		if err := rows.Scan(&curNegH.Id, &curNegH.UserId, &curNegH.CustomerId, &curNegH.ComMeanId,
-			&curNegH.Description, &curNegH.Stage, &curNegH.DateCreated, &curNegH.BusinessId, &curNegH.CustomerName, &curNegH.MeamComName); err != nil {
+			&curNegH.Description, &curNegH.Stage, &curNegH.DateCreated, &curNegH.BusinessId, &curNegH.CustomerName, &curNegH.MeamComName, &curNegH.NegotiationActive, &curNegH.HasSalesOrder); err != nil {
 			return nil, 0, fmt.Errorf("scan error: %w", err)
 		}
 

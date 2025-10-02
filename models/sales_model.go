@@ -88,16 +88,18 @@ type Negotiation struct {
 }
 
 type NegotiationHistory struct {
-	Id           int64     `json:"id"`
-	ComMeanId    *int64    `json:"id_mean_communication"`
-	MeamComName  string    `json:"com_name"`
-	UserId       *int64    `json:"id_user"`
-	CustomerId   *int64    `json:"id_customer"`
-	CustomerName string    `json:"customer_name"`
-	Description  *string   `json:"description"`
-	Stage        *int64    `json:"stage"`
-	DateCreated  time.Time `json:"created_at"`
-	BusinessId   *int64    `json:"id_business"`
+	Id                int64     `json:"id"`
+	ComMeanId         *int64    `json:"id_mean_communication"`
+	MeamComName       string    `json:"com_name"`
+	UserId            *int64    `json:"id_user"`
+	CustomerId        *int64    `json:"id_customer"`
+	CustomerName      string    `json:"customer_name"`
+	Description       *string   `json:"description"`
+	NegotiationActive *string   `json:"negotiation_active"`
+	Stage             *int64    `json:"stage"`
+	DateCreated       time.Time `json:"created_at"`
+	BusinessId        *int64    `json:"id_business"`
+	HasSalesOrder     *bool     `json:"has_sales_order"`
 }
 
 type CreateNegotiationRequest struct {
