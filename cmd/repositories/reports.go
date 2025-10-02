@@ -12,18 +12,18 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func GetNegotiationsReport(pagenum string, limitPerPage string, name string, boat string) ([]models.Negotiation, int, error) {
+func GetNegotiationsReport(pagenum string, limitPerPage string, name string, boat string) ([]models.NegotiationReport, int, error) {
 	db := storage.GetDB()
 
-	var negs []models.Negotiation
+	var negs []models.NegotiationReport
 
 	pagenumber, err := strconv.Atoi(pagenum)
 	if err != nil {
-		return nil, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve boats (PG1)")
+		return nil, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve report (PG1)")
 	}
 	limit, err := strconv.Atoi(limitPerPage)
 	if err != nil {
-		return nil, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve boats (PG2)")
+		return nil, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve report (PG2)")
 	}
 
 	offset := (pagenumber - 1) * limit
@@ -31,6 +31,22 @@ func GetNegotiationsReport(pagenum string, limitPerPage string, name string, boa
 	conds := []string{}
 	args := []interface{}{}
 	paramCount := 1
+
+	if name != "" {
+		conds = append(conds, fmt.Sprintf("C.name ILIKE $%d", paramCount))
+		args = append(args, "%"+name+"%")
+		paramCount++
+	}
+
+	if boat != "" {
+		conds = append(conds, fmt.Sprintf("SB.boat_name ILIKE $%d", paramCount))
+		args = append(args, "%"+boat+"%")
+		paramCount++
+	}
+
+	conds = append(conds, fmt.Sprintf("SB.negotiation_active = $%d", paramCount))
+	args = append(args, "Y")
+	paramCount++
 
 	where := ""
 	if len(conds) > 0 {
@@ -42,29 +58,43 @@ func GetNegotiationsReport(pagenum string, limitPerPage string, name string, boa
 	offsetArgPos := paramCount + 1
 
 	query := fmt.Sprintf(`
-	SELECT SB.id, 
-			SB.id_customer,
-	 		SB.id_mean_communication, 
-			C.name,
-			C.email,
-			C.phone,
-			MC.name,
-			SB.boat_name, 
-			SB.estimated_value, 
-			SB.max_estimated_value, 
-			SB.customer_city, 
-			SB.customer_navigation_city, 
-			SB.boat_capacity_needed, 
-			SB.new_used, 
-			SB.cab_open, 
-			SB.stage, 
-			C.qualified,
-			(SB.created_at < now() - interval '24 hours') AS has_passed_24hrs
-	FROM so_business AS SB
+		SELECT
+		SB.id,
+		SB.id_customer,
+		SB.id_mean_communication,
+		MC.name AS mean_communication_name,
+		C.name,
+		C.email,
+		C.phone,
+		SB.boat_name,
+		SB.estimated_value,
+		SB.stage,
+		
+		-- days since stage_last_updated_at (integer days)
+		DATE_PART('day', NOW() - SB.stage_last_updated_at)::bigint AS days_since_stage_change,
 
-	INNER JOIN customers AS C ON SB.id_customer = C.id
-	INNER JOIN mean_communication AS MC ON SB.id_mean_communication = MC.id
+		-- most recent history timestamp per business
+		BH.last_history_at,
 
+		-- days since last history (integer days), null if no history
+		CASE WHEN BH.last_history_at IS NOT NULL
+			THEN DATE_PART('day', NOW() - BH.last_history_at)::bigint
+			ELSE NULL END AS days_since_last_history
+
+		-- full interval since last history (null if no history)
+		-- CASE WHEN BH.last_history_at IS NOT NULL
+		--	THEN NOW() - BH.last_history_at
+		--	ELSE NULL END AS time_since_last_history
+
+		FROM so_business AS SB
+		INNER JOIN customers AS C ON SB.id_customer = C.id
+		LEFT JOIN mean_communication AS MC ON SB.id_mean_communication = MC.id
+		-- subquery to get most recent history per business (id_business links to so_business.id)
+		LEFT JOIN (
+		SELECT id_business, MAX(created_at) AS last_history_at
+		FROM business_histories
+		GROUP BY id_business
+		) AS BH ON BH.id_business = SB.id
 	%s
 	ORDER BY SB.id
 	LIMIT $%d OFFSET $%d
@@ -76,14 +106,20 @@ func GetNegotiationsReport(pagenum string, limitPerPage string, name string, boa
 		if err == sql.ErrNoRows {
 			return negs, 0, echo.NewHTTPError(http.StatusNotFound, "Negotiations not found")
 		}
-		return negs, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve negotiations")
+		return negs, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve negotiations"+err.Error())
 	}
 
 	queryTotalRecords := fmt.Sprintf(`
 	SELECT COUNT(1)
 	FROM so_business AS SB
-	INNER JOIN customers AS C ON SB.id_customer = C.id
-	INNER JOIN mean_communication AS MC ON SB.id_mean_communication = MC.id
+		LEFT JOIN customers AS C ON SB.id_customer = C.id
+		LEFT JOIN mean_communication AS MC ON SB.id_mean_communication = MC.id
+		-- subquery to get most recent history per business (id_business links to so_business.id)
+		LEFT JOIN (
+		SELECT id_business, MAX(created_at) AS last_history_at
+		FROM business_histories
+		GROUP BY id_business
+		) AS BH ON BH.id_business = SB.id
 	%s
 	`, where)
 	//println(queryTotalRecords)
@@ -93,12 +129,11 @@ func GetNegotiationsReport(pagenum string, limitPerPage string, name string, boa
 	rowsCount.Scan(&numRecords)
 
 	for rows.Next() {
-		var curNeg models.Negotiation
+		var curNeg models.NegotiationReport
 
 		if err := rows.Scan(&curNeg.Id, &curNeg.CustomerId, &curNeg.MeanComId,
 			&curNeg.Name, &curNeg.Email, &curNeg.Phone, &curNeg.MeamComName,
-			&curNeg.BoatName, &curNeg.EstimatedValue, &curNeg.MaxEstimatedValue, &curNeg.City,
-			&curNeg.NavigationCity, &curNeg.BoatCapacityNeeded, &curNeg.NewUsed, &curNeg.CabOpen, &curNeg.Stage, &curNeg.Qualified, &curNeg.HasPassed24Hrs); err != nil {
+			&curNeg.BoatName, &curNeg.EstimatedValue, &curNeg.Stage, &curNeg.DaysSinceStageChange, &curNeg.LastHistoryAt, &curNeg.DaysSinceLastHistory); err != nil {
 			return nil, 0, fmt.Errorf("scan error: %w", err)
 		}
 
