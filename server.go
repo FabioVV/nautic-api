@@ -13,6 +13,7 @@ import (
 	"nautic/auth"
 	auth_h "nautic/cmd/handlers/auth"
 	"nautic/cmd/handlers/products"
+	"nautic/cmd/handlers/reports"
 	"nautic/cmd/handlers/sales"
 	"nautic/cmd/handlers/users"
 
@@ -162,6 +163,14 @@ func main() {
 	/*SALES CUSTOMERS ROUTES*/
 
 	/*SALES ROUTES*/
+
+	/*SALES REPORTS ROUTES*/
+	salReps := salRoutes.Group("/reports")
+	salReps.Use(echojwt.WithConfig(configJwt))
+	salReps.Use(nmiddleware.CheckRoleAndPermissions)
+	salReps.GET("/negotiations", reports.GetNegotiationsReport)
+
+	/*SALES REPORTS ROUTES*/
 
 	e.Logger.Fatal(e.Start(":8080"))
 }
