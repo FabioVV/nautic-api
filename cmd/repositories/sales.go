@@ -187,15 +187,21 @@ func GetCustomersBirthday() ([]models.Customer, int, error) {
 	INNER JOIN users AS U ON C.id_user = U.id
 	INNER JOIN mean_communication AS MC ON C.id_mean_communication = MC.id
 
-	WHERE C.birthdate IS NOT NULL AND
-	(EXTRACT(MONTH FROM C.birthdate) = EXTRACT(MONTH FROM CURRENT_DATE) 
-    AND EXTRACT(DAY FROM C.birthdate) >= EXTRACT(DAY FROM CURRENT_DATE)
-    AND EXTRACT(DAY FROM C.birthdate) <= EXTRACT(DAY FROM CURRENT_DATE + INTERVAL '1 month'))
-    	OR
-    (EXTRACT(MONTH FROM C.birthdate) = EXTRACT(MONTH FROM CURRENT_DATE + INTERVAL '1 month')
-    AND EXTRACT(DAY FROM C.birthdate) <= EXTRACT(DAY FROM CURRENT_DATE + INTERVAL '1 month'))
-
-	ORDER BY EXTRACT(MONTH FROM C.birthdate), EXTRACT(DAY FROM C.birthdate), C.name
+	WHERE C.birthdate IS NOT NULL 
+	AND (
+        make_date(
+            EXTRACT(YEAR FROM CURRENT_DATE)::int,
+            EXTRACT(MONTH FROM C.birthdate)::int,
+            EXTRACT(DAY   FROM C.birthdate)::int
+        ) BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '30 days'
+        OR
+        make_date(
+            (EXTRACT(YEAR FROM CURRENT_DATE)::int) + 1,
+            EXTRACT(MONTH FROM C.birthdate)::int,
+            EXTRACT(DAY   FROM C.birthdate)::int
+        ) BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '30 days'
+      )
+	ORDER BY EXTRACT(MONTH FROM C.birthdate), EXTRACT(DAY   FROM C.birthdate), C.name
 	`
 
 	rows, err := db.Query(query)
