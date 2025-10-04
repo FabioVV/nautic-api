@@ -25,6 +25,40 @@ func InsertBoat(acc *models.CreateBoatRequest) error {
 	return nil
 }
 
+func GetBoatAds() ([]models.BoatAd, error) {
+	db := storage.GetDB()
+	var ads []models.BoatAd
+
+	query := `
+	SELECT BA.id, BA.id_boat, BA.id_mean_communication, BA.link
+
+	FROM boat_ads AS BA
+
+	ORDER BY BA.id
+	`
+
+	rows, err := db.Query(query)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return ads, echo.NewHTTPError(http.StatusNotFound, "Boats ads not found")
+		}
+		return ads, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve boats ads")
+	}
+
+	for rows.Next() {
+		var curAcc models.BoatAd
+		rows.Scan(&curAcc.Id, &curAcc.BoatId, &curAcc.ComMeanId, &curAcc.Link)
+		ads = append(ads, curAcc)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows error: %w", err)
+	}
+
+	return ads, nil
+}
+
 func GetBoatEngines() ([]models.Engine, error) {
 	db := storage.GetDB()
 	var engs []models.Engine
@@ -241,6 +275,24 @@ func RemoveBoatAccessory(id int, id_acc int) error {
 	return nil
 }
 
+func RemoveBoatAd(id int, id_mean int) error {
+	db := storage.GetDB()
+
+	// _, err := GetBoatAd(id_mean)
+	// if err != nil {
+	// 	return err
+	// }
+
+	query := `DELETE FROM boat_ads WHERE id_mean_communication = $1 AND id_boat = $2`
+
+	_, err := db.Exec(query, id_mean, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func RemoveBoatEngine(id int, id_eng int) error {
 	db := storage.GetDB()
 
@@ -275,6 +327,29 @@ func InsertEngineAccessory(id int, id_eng int) error {
 	query := "INSERT INTO boat_engines (id_boat, id_engine) VALUES ($1, $2)"
 
 	_, err := db.Exec(query, id, id_eng)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func InsertBoatAd(id int, id_mean int, bAd *models.BoatAdCreate) error {
+	db := storage.GetDB()
+
+	var exists bool
+	checkQuery := `SELECT EXISTS(SELECT 1 FROM boat_ads WHERE id_boat = $1 AND id_mean_communication = $2)`
+	if err := db.QueryRow(checkQuery, id, id_mean).Scan(&exists); err != nil {
+		return err
+	}
+
+	// if exists {
+	// 	return echo.NewHTTPError(http.StatusBadRequest, "ad already linked with the boat")
+	// }
+
+	query := "INSERT INTO boat_ads (id_boat, id_mean_communication, link) VALUES ($1, $2, $3)"
+
+	_, err := db.Exec(query, id, id_mean, bAd.Link)
 	if err != nil {
 		return err
 	}

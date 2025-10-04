@@ -128,3 +128,14 @@ type CreateEngineRequest struct {
 	Tempo      *float64 `json:"Tempo" validate:"required"`
 	FuelType   *string  `json:"FuelType" validate:"required"`
 }
+
+type BoatAd struct {
+	Id        *int64  `json:"id"`
+	ComMeanId *int64  `json:"id_mean_communication"`
+	BoatId    *int64  `json:"id_boat"`
+	Link      *string `json:"link"`
+}
+
+type BoatAdCreate struct {
+	Link *string `json:"link"`
+}

@@ -193,6 +193,30 @@ func InsertBoatEngine(c echo.Context) error {
 	})
 }
 
+func RemoveBoatAd(c echo.Context) error {
+	idParam := c.Param("id")
+	idMean := c.Param("id_mean")
+
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	id_mean, err := strconv.Atoi(idMean)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	err = repositories.RemoveBoatAd(id, id_mean)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusNoContent, echo.Map{
+		"message": "Boat ad successfully removed",
+	})
+}
+
 func RemoveBoatEngine(c echo.Context) error {
 	idParam := c.Param("id")
 	idParamEng := c.Param("id_eng")
@@ -238,6 +262,39 @@ func RemoveBoatAccessory(c echo.Context) error {
 
 	return c.JSON(http.StatusNoContent, echo.Map{
 		"message": "Boat accessory successfully removed",
+	})
+}
+
+func InsertBoatAd(c echo.Context) error {
+	idParamBoat := c.Param("id")
+	idmean := c.Param("id_mean")
+	bAd := new(models.BoatAdCreate)
+
+	boatID, err := strconv.Atoi(idParamBoat)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	meanID, err := strconv.Atoi(idmean)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	if err := c.Bind(bAd); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request payload")
+	}
+
+	if err := c.Validate(bAd); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
+	}
+
+	err = repositories.InsertBoatAd(boatID, meanID, bAd)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusCreated, echo.Map{
+		"message": "Ad successfully added",
 	})
 }
 
@@ -368,6 +425,17 @@ func InsertAccessory(c echo.Context) error {
 
 	return c.JSON(http.StatusCreated, echo.Map{
 		"message": "accessory type created successfully",
+	})
+}
+
+func GetBoatAds(c echo.Context) error {
+	ads, err := repositories.GetBoatAds()
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"data": ads,
 	})
 }
 

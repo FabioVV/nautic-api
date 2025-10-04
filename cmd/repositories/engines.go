@@ -139,6 +139,26 @@ func GetEngine(id int) (models.Engine, error) {
 	var curAcc models.Engine
 	query := `
 	SELECT id, model, type, weight, rotation, power, cylinders, selling_price, command, clocks, tempo, fuel_type, active, created_at, updated_at, propulsion
+	FROM boat_ads
+	WHERE id = $1`
+
+	if err := db.QueryRow(query, id).Scan(&curAcc.Id, &curAcc.Model, &curAcc.Type, &curAcc.Weight, &curAcc.Rotation, &curAcc.Power, &curAcc.Cylinders,
+		&curAcc.PriceSell, &curAcc.Command, &curAcc.Clocks, &curAcc.Tempo, &curAcc.FuelType, &curAcc.Active, &curAcc.CreatedAt, &curAcc.UpdatedAt, &curAcc.Propulsion); err != nil {
+		if err == sql.ErrNoRows {
+			return curAcc, echo.NewHTTPError(http.StatusNotFound, "Engine not found")
+		}
+		return curAcc, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve engine")
+	}
+
+	return curAcc, nil
+}
+
+func GetBoatAd(id int) (models.Engine, error) {
+	db := storage.GetDB()
+
+	var curAcc models.Engine
+	query := `
+	SELECT id, model, type, weight, rotation, power, cylinders, selling_price, command, clocks, tempo, fuel_type, active, created_at, updated_at, propulsion
 	FROM engines
 	WHERE id = $1`
 
