@@ -392,3 +392,21 @@ func UpdateNegotiationAdvanceStage(c echo.Context) error {
 		"message": "Negotiation updated successfully",
 	})
 }
+
+func GetSalesOrder(c echo.Context) error {
+	idParam := c.Param("id")
+
+	idSalesOrder, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	data, err := repositories.GetSalesOrder(idSalesOrder)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"data": data,
+	})
+}

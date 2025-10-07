@@ -149,6 +149,8 @@ func main() {
 	salOrdRoutes.Use(echojwt.WithConfig(configJwt))
 	salOrdRoutes.Use(nmiddleware.CheckRoleAndPermissions)
 	salOrdRoutes.POST("/negotiations/history/:id", sales.InsertSalesOrder)
+	salOrdRoutes.GET("/:id", sales.GetSalesOrder)
+	salOrdRoutes.GET("/:id/itens", sales.GetSalesOrder) // return itens, engine and boat, each one separated in the map
 
 	/*SALES ORDERS ROUTES*/
 
