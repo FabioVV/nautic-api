@@ -100,6 +100,7 @@ type NegotiationHistory struct {
 	Stage             *int64    `json:"stage"`
 	DateCreated       time.Time `json:"created_at"`
 	BusinessId        *int64    `json:"id_business"`
+	SalesOrderId      *int64    `json:"id_sales_order"`
 	HasSalesOrder     *bool     `json:"has_sales_order"`
 }
 
