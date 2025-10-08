@@ -258,6 +258,30 @@ func UpdateEngineSalesOrder(c echo.Context) error {
 	})
 }
 
+func UpdateAccessorySalesOrder(c echo.Context) error {
+	idParam := c.Param("id")
+	idParamAccessory := c.Param("id_accessory")
+
+	soID, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	accID, err := strconv.Atoi(idParamAccessory)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	err = repositories.UpdateAccessorySalesOrder(soID, accID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Sales order updated successfully",
+	})
+}
+
 func InsertSalesOrder(c echo.Context) error {
 	idParam := c.Param("id")
 
@@ -450,6 +474,24 @@ func GetSalesOrder(c echo.Context) error {
 	}
 
 	data, err := repositories.GetSalesOrder(idSalesOrder)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"data": data,
+	})
+}
+
+func GetSalesOrderItens(c echo.Context) error {
+	idParam := c.Param("id")
+
+	idSalesOrder, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	data, err := repositories.GetSalesOrderItens(idSalesOrder)
 	if err != nil {
 		return err
 	}

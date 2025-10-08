@@ -41,3 +41,14 @@ type SalesOrder struct {
 	UpdatedAt        *time.Time `json:"updated_at"`
 	DeliveryAt       *time.Time `json:"delivery_at"`
 }
+
+type SalesOrderItem struct {
+	Id          *int64   `json:"id"`
+	AccessoryId *int64   `json:"id_accessory"`
+	Model       *float64 `json:"model"`
+
+	UnitPrice       *float64 `json:"unit_price"`
+	Quantity        *int64   `json:"qty"`
+	Discount        *float64 `json:"discount"`
+	TotalPriceItens *float64 `json:"total_price_itens"`
+}

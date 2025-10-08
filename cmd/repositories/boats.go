@@ -76,9 +76,9 @@ func GetBoatEngines() ([]models.Engine, error) {
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return engs, echo.NewHTTPError(http.StatusNotFound, "Boats accessories not found")
+			return engs, echo.NewHTTPError(http.StatusNotFound, "Boats engines not found")
 		}
-		return engs, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve boats accessories")
+		return engs, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve boats engines")
 	}
 
 	for rows.Next() {

@@ -1116,37 +1116,6 @@ func UpdateEngineSalesOrder(id int, id_engine int) error {
 	return nil
 }
 
-// func CalculateSalesOrderTotalValue(id int) error {
-// 	db := storage.GetDB()
-
-// 	boat, err := GetBoat(id_boat)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	var id_check int = 0
-// 	query := `SELECT id FROM sales_orders_itens WHERE id_boat = $1 AND id_sales_order = $2`
-// 	db.QueryRow(query, id_boat, id).Scan(&id_check)
-
-// 	if id_check == 0 {
-// 		query := `INSERT INTO sales_orders_itens(id_boat, id_sales_order, qty, unit_price) VALUES ($1, $2, $3, $4)`
-
-// 		_, err := db.Exec(query, id_boat, id, 1, boat.PriceSell)
-// 		if err != nil {
-// 			return err
-// 		}
-// 	} else {
-// 		query := `UPDATE sales_orders_itens SET id_boat = $1, unit_price = $2 WHERE id_sales_order = $3`
-
-// 		_, err := db.Exec(query, id_boat, boat.PriceSell, id)
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
-
-// 	return nil
-// }
-
 func UpdateBoatSalesOrder(id int, id_boat int) error {
 	db := storage.GetDB()
 
@@ -1175,6 +1144,31 @@ func UpdateBoatSalesOrder(id int, id_boat int) error {
 		}
 	}
 
+	return nil
+}
+
+func UpdateAccessorySalesOrder(id int, id_accessory int) error {
+	db := storage.GetDB()
+
+	acc, err := GetAccessory(id_accessory)
+	if err != nil {
+		return err
+	}
+
+	var id_check int = 0
+	query := `SELECT id FROM sales_orders_itens WHERE id_accessory = $1 AND id_sales_order = $2`
+	db.QueryRow(query, id_accessory, id).Scan(&id_check)
+
+	if id_check == 0 {
+		query := `INSERT INTO sales_orders_itens(id_accessory, id_sales_order, qty, unit_price) VALUES ($1, $2, $3, $4)`
+
+		_, err := db.Exec(query, id_accessory, id, 1, acc.PriceSell)
+		if err != nil {
+			return err
+		}
+	} else {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Accessory already added to this sales order")
+	}
 	return nil
 }
 

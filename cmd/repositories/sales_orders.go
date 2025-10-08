@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"database/sql"
+	"fmt"
 	"nautic/cmd/storage"
 	"nautic/models"
 	"net/http"
@@ -53,7 +55,7 @@ func GetSalesOrder(salesOrderId int) (models.SalesOrder, error) {
 	INNER JOIN business_histories AS BHI ON SO.id_business_history = BHI.id
 	INNER JOIN customers AS C ON BHI.id_customer = C.id
 	INNER JOIN users AS U ON BHI.id_user = U.id
-	INNER JOIN sales_orders_itens AS SOI ON SO.id = SOI.id_sales_order
+	LEFT JOIN sales_orders_itens AS SOI ON SO.id = SOI.id_sales_order
 
 	WHERE SO.id = $1
 	`
@@ -80,16 +82,56 @@ func GetSalesOrder(salesOrderId int) (models.SalesOrder, error) {
 		&so.PfPj,
 		&so.Cpf,
 		&so.Cnpj,
-		&so.OrderBoatId,
-		&so.OrderBoatModel,
-		&so.OrderEngineId,
-		&so.OrderEngineModel,
 		&so.OrderBoatPrice,
 		&so.OrderEnginePrice,
+		&so.OrderEngineId,
+		&so.OrderBoatId,
+		&so.OrderEngineModel,
+		&so.OrderBoatModel,
 	)
 	if err != nil {
 		return so, echo.NewHTTPError(http.StatusInternalServerError, "Internal server error (db)"+err.Error())
 	}
 
 	return so, nil
+}
+
+func GetSalesOrderItens(salesOrderId int) ([]models.SalesOrderItem, error) {
+	db := storage.GetDB()
+	var sos []models.SalesOrderItem
+
+	query := `
+	SELECT SOS.id, SOS.id_accessory, SOS.discount, A.model, SOS.qty, SOS.unit_price, SUM(SOS.unit_price * SOS.qty) OVER () AS total_price_itens
+	FROM sales_orders_itens AS SOS 
+	LEFT JOIN accessories AS A ON SOS.id_accessory = A.id
+
+	WHERE SOS.id_sales_order = $1 
+	AND SOS.id_boat IS NULL 
+	AND SOS.id_engine IS NULL
+	`
+
+	rows, err := db.Query(query, salesOrderId)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return sos, echo.NewHTTPError(http.StatusNotFound, "Sales order items not found")
+		}
+		return sos, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve sales order items"+err.Error())
+	}
+
+	for rows.Next() {
+		var curSos models.SalesOrderItem
+
+		if err := rows.Scan(&curSos.Id, &curSos.AccessoryId, &curSos.Discount, &curSos.Model, &curSos.Quantity, &curSos.UnitPrice, &curSos.TotalPriceItens); err != nil {
+			return nil, fmt.Errorf("scan error: %w", err)
+		}
+
+		sos = append(sos, curSos)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows error: %w", err)
+	}
+
+	return sos, nil
 }

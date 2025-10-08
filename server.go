@@ -150,10 +150,11 @@ func main() {
 	salOrdRoutes.Use(nmiddleware.CheckRoleAndPermissions)
 	salOrdRoutes.POST("/negotiations/history/:id", sales.InsertSalesOrder)
 	salOrdRoutes.GET("/:id", sales.GetSalesOrder)
+	salOrdRoutes.GET("/:id/itens", sales.GetSalesOrderItens)
 
 	salOrdRoutes.PATCH("/:id/boat/:id_boat", sales.UpdateBoatSalesOrder)
 	salOrdRoutes.PATCH("/:id/engine/:id_engine", sales.UpdateEngineSalesOrder)
-	salOrdRoutes.GET("/:id/itens", sales.GetSalesOrder) // return itens, engine and boat, each one separated in the map
+	salOrdRoutes.PATCH("/:id/accessory/:id_accessory", sales.UpdateAccessorySalesOrder)
 
 	/*SALES ORDERS ROUTES*/
 
