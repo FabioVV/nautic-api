@@ -13,6 +13,14 @@ type SalesOrder struct {
 	CustomerEmail *string `json:"customer_email"`
 	CustomerPhone *string `json:"customer_phone"`
 
+	OrderBoatModel   *string `json:"OrderBoatModel"`
+	OrderBoatId      *string `json:"OrderBoatId"`
+	OrderEngineModel *string `json:"OrderEngineModel"`
+	OrderEngineId    *string `json:"OrderEngineId"`
+
+	OrderBoatPrice   *float64 `json:"OrderBoatPrice"`
+	OrderEnginePrice *float64 `json:"OrderEnginePrice"`
+
 	SellerName *string `json:"seller_name"`
 
 	PfPj         *string `json:"PfPj" validate:"required"`

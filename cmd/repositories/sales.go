@@ -1085,6 +1085,99 @@ func UpdateNegotiation(id int, negT *models.CreateNegotiationRequest) error {
 	return nil
 }
 
+func UpdateEngineSalesOrder(id int, id_engine int) error {
+	db := storage.GetDB()
+
+	engine, err := GetEngine(id_engine)
+	if err != nil {
+		return err
+	}
+
+	var id_check int = 0
+	query := `SELECT id FROM sales_orders_itens WHERE id_engine = $1 AND id_sales_order = $2`
+	db.QueryRow(query, id_engine, id).Scan(&id_check)
+
+	if id_check == 0 {
+		query := `INSERT INTO sales_orders_itens(id_engine, id_sales_order, qty, unit_price) VALUES ($1, $2, $3, $4)`
+
+		_, err := db.Exec(query, id_engine, id, 1, engine.PriceSell)
+		if err != nil {
+			return err
+		}
+	} else {
+		query := `UPDATE sales_orders_itens SET id_engine = $1, unit_price = $2 WHERE id_sales_order = $3`
+
+		_, err := db.Exec(query, id_engine, engine.PriceSell, id)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// func CalculateSalesOrderTotalValue(id int) error {
+// 	db := storage.GetDB()
+
+// 	boat, err := GetBoat(id_boat)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	var id_check int = 0
+// 	query := `SELECT id FROM sales_orders_itens WHERE id_boat = $1 AND id_sales_order = $2`
+// 	db.QueryRow(query, id_boat, id).Scan(&id_check)
+
+// 	if id_check == 0 {
+// 		query := `INSERT INTO sales_orders_itens(id_boat, id_sales_order, qty, unit_price) VALUES ($1, $2, $3, $4)`
+
+// 		_, err := db.Exec(query, id_boat, id, 1, boat.PriceSell)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	} else {
+// 		query := `UPDATE sales_orders_itens SET id_boat = $1, unit_price = $2 WHERE id_sales_order = $3`
+
+// 		_, err := db.Exec(query, id_boat, boat.PriceSell, id)
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
+
+// 	return nil
+// }
+
+func UpdateBoatSalesOrder(id int, id_boat int) error {
+	db := storage.GetDB()
+
+	boat, err := GetBoat(id_boat)
+	if err != nil {
+		return err
+	}
+
+	var id_check int = 0
+	query := `SELECT id FROM sales_orders_itens WHERE id_boat = $1 AND id_sales_order = $2`
+	db.QueryRow(query, id_boat, id).Scan(&id_check)
+
+	if id_check == 0 {
+		query := `INSERT INTO sales_orders_itens(id_boat, id_sales_order, qty, unit_price) VALUES ($1, $2, $3, $4)`
+
+		_, err := db.Exec(query, id_boat, id, 1, boat.PriceSell)
+		if err != nil {
+			return err
+		}
+	} else {
+		query := `UPDATE sales_orders_itens SET id_boat = $1, unit_price = $2 WHERE id_sales_order = $3`
+
+		_, err := db.Exec(query, id_boat, boat.PriceSell, id)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func UpdateNegotiationAdvanceStage(id int, id_user int, negT *models.AdvanceNegotiationRequest) error {
 	db := storage.GetDB()
 

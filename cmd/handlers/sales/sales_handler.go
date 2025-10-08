@@ -210,6 +210,54 @@ func DeactivateComMeans(c echo.Context) error {
 	})
 }
 
+func UpdateBoatSalesOrder(c echo.Context) error {
+	idParam := c.Param("id")
+	idParamBoat := c.Param("id_boat")
+
+	soID, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	boatID, err := strconv.Atoi(idParamBoat)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	err = repositories.UpdateBoatSalesOrder(soID, boatID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Sales order updated successfully",
+	})
+}
+
+func UpdateEngineSalesOrder(c echo.Context) error {
+	idParam := c.Param("id")
+	idParamEngine := c.Param("id_engine")
+
+	soID, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	engID, err := strconv.Atoi(idParamEngine)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	err = repositories.UpdateEngineSalesOrder(soID, engID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Sales order updated successfully",
+	})
+}
+
 func InsertSalesOrder(c echo.Context) error {
 	idParam := c.Param("id")
 

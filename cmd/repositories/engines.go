@@ -104,7 +104,7 @@ func InsertEngine(acc *models.CreateEngineRequest) error {
 INSERT INTO engines
     (model, type, weight, rotation, power, cylinders, selling_price, command, clocks, tempo, fuel_type, propulsion)
 VALUES
-    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`
+    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`
 
 	var newID int64
 	err := db.QueryRow(
@@ -139,7 +139,7 @@ func GetEngine(id int) (models.Engine, error) {
 	var curAcc models.Engine
 	query := `
 	SELECT id, model, type, weight, rotation, power, cylinders, selling_price, command, clocks, tempo, fuel_type, active, created_at, updated_at, propulsion
-	FROM boat_ads
+	FROM engines
 	WHERE id = $1`
 
 	if err := db.QueryRow(query, id).Scan(&curAcc.Id, &curAcc.Model, &curAcc.Type, &curAcc.Weight, &curAcc.Rotation, &curAcc.Power, &curAcc.Cylinders,
