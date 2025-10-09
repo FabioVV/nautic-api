@@ -54,3 +54,7 @@ type SalesOrderItem struct {
 	Discount        *float64 `json:"discount"`
 	TotalPriceItens *float64 `json:"total_price_itens"`
 }
+
+type UpdateSalesOrderItemQty struct {
+	Qty *int64 `json:"qty"`
+}

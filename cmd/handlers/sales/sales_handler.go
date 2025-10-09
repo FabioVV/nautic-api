@@ -318,6 +318,40 @@ func RemoveAccessorySalesOrder(c echo.Context) error {
 	})
 }
 
+func UpdateAccessoryQtySalesOrder(c echo.Context) error {
+	idParam := c.Param("id")
+	idParamAccessory := c.Param("id_accessory")
+
+	soID, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	accID, err := strconv.Atoi(idParamAccessory)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	accQty := new(models.UpdateSalesOrderItemQty)
+
+	if err := c.Bind(accQty); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request payload")
+	}
+
+	if err := c.Validate(accQty); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
+	}
+
+	err = repositories.UpdateAccessoryQtySalesOrder(soID, accID, accQty)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Sales order updated successfully",
+	})
+}
+
 func UpdateAccessorySalesOrder(c echo.Context) error {
 	idParam := c.Param("id")
 	idParamAccessory := c.Param("id_accessory")

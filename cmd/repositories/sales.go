@@ -1204,18 +1204,43 @@ func UpdateBoatSalesOrder(id int, id_boat int) error {
 func RemoveAccessorySalesOrder(id int, id_accessory int) error {
 	db := storage.GetDB()
 
+	// _, err := GetAccessory(id_accessory)
+	// if err != nil {
+	// 	return err
+	// }
+
+	query := `DELETE FROM sales_orders_itens WHERE id_accessory = $1 AND id_sales_order = $2`
+
+	_, err := db.Exec(query, id_accessory, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func UpdateAccessoryQtySalesOrder(id int, id_accessory int, update *models.UpdateSalesOrderItemQty) error {
+	db := storage.GetDB()
+
 	_, err := GetAccessory(id_accessory)
 	if err != nil {
 		return err
 	}
 
-	query := `DELETE FROM sales_orders_itens WHERE id_accessory = $1 AND id_sales_order = $2`
+	var id_check int = 0
+	query := `SELECT id FROM sales_orders_itens WHERE id_accessory = $1 AND id_sales_order = $2`
+	db.QueryRow(query, id_accessory, id).Scan(&id_check)
 
-	_, err = db.Exec(query, id_accessory, id)
-	if err != nil {
-		return err
+	if id_check != 0 {
+		query := `UPDATE sales_orders_itens SET qty = $1 WHERE id_accessory = $2 AND id_sales_order = $3`
+
+		_, err := db.Exec(query, update.Qty, id_accessory, id)
+		if err != nil {
+			return err
+		}
+	} else {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Accessory not found on boat")
 	}
-
 	return nil
 }
 
