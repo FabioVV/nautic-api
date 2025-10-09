@@ -322,6 +322,48 @@ func InsertBoatAccessory(c echo.Context) error {
 	})
 }
 
+func RemoveBoatFile(c echo.Context) error {
+	idParam := c.Param("id")
+	idFileParam := c.Param("id_file")
+
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	id_file, err := strconv.Atoi(idFileParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	err = repositories.RemoveBoatFile(id, id_file)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusNoContent, echo.Map{
+		"message": "Boat file successfully removed",
+	})
+}
+
+func GetBoatFiles(c echo.Context) error {
+	idParam := c.Param("id")
+
+	bID, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	files, err := repositories.GetBoatFiles(bID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"data": files,
+	})
+}
+
 func GetBoat(c echo.Context) error {
 	idParam := c.Param("id")
 
@@ -337,6 +379,29 @@ func GetBoat(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, echo.Map{
 		"data": acc,
+	})
+}
+
+func UploadBoatFile(c echo.Context) error {
+	idParam := c.Param("id")
+
+	boatID, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	// Handle file upload logic here
+	fileHeader, err := c.FormFile("file")
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "file is required")
+	}
+	err = repositories.UploadBoatFile(boatID, fileHeader)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Boat file uploaded successfully",
 	})
 }
 

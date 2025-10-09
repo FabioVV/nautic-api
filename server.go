@@ -109,7 +109,11 @@ func main() {
 	boatsRoutes.GET("", products.GetBoats)
 	boatsRoutes.POST("", products.InsertBoat)
 	boatsRoutes.GET("/:id", products.GetBoat)
+	boatsRoutes.GET("/:id/files", products.GetBoatFiles)
+	boatsRoutes.DELETE("/:id/files/:id_file", products.RemoveBoatFile)
+
 	boatsRoutes.PATCH("/:id", products.UpdateBoat)
+	boatsRoutes.POST("/:id/boat-file", products.UploadBoatFile)
 
 	boatsRoutes.POST("/:id/ads/:id_mean", products.InsertBoatAd)
 	boatsRoutes.POST("/:id/accessories/:id_acc", products.InsertBoatAccessory)
@@ -190,6 +194,7 @@ func main() {
 	salReps.GET("/sales-orders", reports.GetSalesOrdersReport)
 
 	/*SALES REPORTS ROUTES*/
+	e.Static("/uploads", "uploads")
 
 	e.Logger.Fatal(e.Start(":8080"))
 }

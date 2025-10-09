@@ -139,3 +139,8 @@ type BoatAd struct {
 type BoatAdCreate struct {
 	Link *string `json:"link"`
 }
+
+type BoatFile struct {
+	Id   *int64  `json:"id"`
+	Path *string `json:"path"`
+}

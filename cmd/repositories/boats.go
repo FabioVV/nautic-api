@@ -3,11 +3,16 @@ package repositories
 import (
 	"database/sql"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"nautic/cmd/storage"
 	"nautic/models"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
 )
@@ -227,6 +232,49 @@ func GetBoats(pagenum string, limitPerPage string, model string, price string, i
 	return boats, numRecords, nil
 }
 
+func RemoveBoatFile(id int, id_file int) error {
+	db := storage.GetDB()
+	query := `UPDATE boat_files SET soft_deleted = 'Y' WHERE id = $1 AND id_boat = $2`
+
+	_, err := db.Exec(query, id_file, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func GetBoatFiles(id int) ([]models.BoatFile, error) {
+	db := storage.GetDB()
+	var files []models.BoatFile
+
+	query := `
+	SELECT BF.id, BF.path 
+	FROM boat_files AS BF
+	WHERE BF.id_boat = $1 AND BF.soft_deleted = 'N'
+	ORDER BY BF.id
+	`
+	rows, err := db.Query(query, id)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return files, echo.NewHTTPError(http.StatusNotFound, "Boat files not found")
+		}
+		return files, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve boat files")
+	}
+
+	for rows.Next() {
+		var curFile models.BoatFile
+		rows.Scan(&curFile.Id, &curFile.Path)
+
+		*curFile.Path = strings.ReplaceAll(*curFile.Path, "\\", "/") // for windows paths
+		*curFile.Path = "http://127.0.0.1:8080/" + *curFile.Path
+		files = append(files, curFile)
+	}
+
+	return files, nil
+}
+
 func GetBoat(id int) (models.Boat, error) {
 	db := storage.GetDB()
 
@@ -373,6 +421,44 @@ func InsertBoatAccessory(id int, id_acc int) error {
 	query := "INSERT INTO boat_accessories (id_boat, id_accessory) VALUES ($1, $2)"
 
 	_, err := db.Exec(query, id, id_acc)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func UploadBoatFile(id int, file *multipart.FileHeader) error {
+	db := storage.GetDB()
+
+	src, err := file.Open()
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to process uploaded file")
+	}
+	defer src.Close()
+
+	uploadDir := filepath.Join(".", "uploads", "boats", fmt.Sprintf("%d", id))
+	if err := os.MkdirAll(uploadDir, 0o755); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create upload directory")
+	}
+
+	ts := time.Now().Format("20060102_150405") // YYYYMMDD_HHMMSS
+	fname := filepath.Base(file.Filename)
+	fname = strings.ReplaceAll(fname, " ", "_")
+	dstName := fmt.Sprintf("boat_%d_%s_%s", id, ts, fname)
+	dstPath := filepath.Join(uploadDir, dstName)
+
+	dst, err := os.Create(dstPath)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create destination file")
+	}
+	if _, err := io.Copy(dst, src); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to save file")
+	}
+
+	query := "INSERT INTO boat_files (path, id_boat) VALUES ($1, $2)"
+
+	_, err = db.Exec(query, dstPath, id)
 	if err != nil {
 		return err
 	}
