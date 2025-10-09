@@ -137,8 +137,11 @@ func main() {
 
 	salRoutes.GET("/negotiations/:id", sales.GetNegotiation)
 	salRoutes.GET("/negotiations", sales.GetNegotiations)
+	salRoutes.GET("/negotiations/alerts", sales.GetNegotiationsAlerts)
 	salRoutes.POST("/negotiations", sales.InsertNegotiation)
 	salRoutes.PATCH("/negotiations/:id", sales.UpdateNegotiation)
+	salRoutes.PATCH("/negotiations/:id/deactivate", sales.LostNegotiation)
+	salRoutes.PATCH("/negotiations/:id/reactivate", sales.ReactivateNegotiation)
 	salRoutes.PATCH("/negotiations/:id/advance", sales.UpdateNegotiationAdvanceStage)
 
 	salRoutes.POST("/negotiations/:id/history", sales.InsertNegotiationHistory)

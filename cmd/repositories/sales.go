@@ -526,6 +526,78 @@ func GetNegotiationHistory(id_business int, id_user int) ([]models.NegotiationHi
 	return negsh, numRecords, nil
 }
 
+func GetNegotiationsAlerts(userId int) ([]models.NegotiationAlert, error) {
+	db := storage.GetDB()
+
+	var negs []models.NegotiationAlert
+
+	conds := []string{}
+	args := []interface{}{}
+	paramCount := 1
+
+	conds = append(conds, fmt.Sprintf("C.id_user = $%d", paramCount))
+	args = append(args, userId)
+	paramCount++
+
+	where := ""
+	if len(conds) > 0 {
+		where = "WHERE " + strings.Join(conds, " AND ")
+	}
+
+	query := fmt.Sprintf(`
+	SELECT NA.id, NA.id_business, C.name, C.phone, NA.motive, NA.date
+	FROM negotiations_alerts AS NA
+
+	INNER JOIN so_business AS SB ON NA.id_business = SB.id
+	INNER JOIN customers AS C ON SB.id_customer = C.id
+	INNER JOIN users AS U ON C.id_user = U.id
+
+	%s
+	ORDER BY NA.id
+	`, where)
+
+	rows, err := db.Query(query, args...)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return negs, echo.NewHTTPError(http.StatusNotFound, "Negotiation alerts not found")
+		}
+		return negs, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve negotiation alerts")
+	}
+
+	queryTotalRecords := fmt.Sprintf(`
+	SELECT COUNT(1)
+	FROM negotiations_alerts AS NA
+
+	INNER JOIN so_business AS SB ON NA.id_business = SB.id
+	INNER JOIN customers AS C ON SB.id_customer = C.id
+	INNER JOIN users AS U ON C.id_user = U.id
+
+	%s
+	`, where)
+	//println(queryTotalRecords)
+
+	rowsCount := db.QueryRow(queryTotalRecords, args...)
+	numRecords := 0
+	rowsCount.Scan(&numRecords)
+
+	for rows.Next() {
+		var curNeg models.NegotiationAlert
+
+		if err := rows.Scan(&curNeg.Id, &curNeg.BusinessId, &curNeg.CustomerName, &curNeg.CustomerPhone, &curNeg.Motive, &curNeg.Date); err != nil {
+			return nil, fmt.Errorf("scan error: %w", err)
+		}
+
+		negs = append(negs, curNeg)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows error: %w", err)
+	}
+
+	return negs, nil
+}
+
 func GetNegotiations(search string, userId int) ([]models.Negotiation, int, error) {
 	db := storage.GetDB()
 
@@ -543,6 +615,10 @@ func GetNegotiations(search string, userId int) ([]models.Negotiation, int, erro
 
 	conds = append(conds, fmt.Sprintf("C.id_user = $%d", paramCount))
 	args = append(args, userId)
+	paramCount++
+
+	conds = append(conds, fmt.Sprintf("SB.negotiation_active = $%d", paramCount))
+	args = append(args, "Y")
 	paramCount++
 
 	where := ""
@@ -963,6 +1039,42 @@ func UpdateCustomer(id int, cT *models.CustomerRequest) error {
 	params = append(params, id)
 
 	_, err := db.Exec(query, params...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ReactivateNegotiation(id int) error {
+	db := storage.GetDB()
+	query := `UPDATE so_business SET negotiation_active = $1, updated_at = NOW() WHERE id = $2`
+
+	_, err := db.Exec(query, "Y", id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func LostNegotiation(id int, negT *models.LostNegotiation) error {
+	db := storage.GetDB()
+	query := `UPDATE so_business SET negotiation_active = $1, updated_at = NOW() WHERE id = $2`
+
+	_, err := db.Exec(query, "N", id)
+	if err != nil {
+		return err
+	}
+
+	query = `INSERT INTO lost_negotiations (id_business, motive, customer_got_another_boat, which_boat, our_boat_offered) VALUES ($1, $2, $3, $4, $5)`
+	_, err = db.Exec(query, id, negT.Motive, negT.CustomerGotAnotherBoat, negT.WhichBoat, negT.OurBoatOffered)
+	if err != nil {
+		return err
+	}
+
+	query = `INSERT INTO negotiations_alerts (id_business, motive, date) VALUES ($1, $2, $3)`
+	_, err = db.Exec(query, id, negT.DateAlertMotive, negT.DateAlert)
 	if err != nil {
 		return err
 	}

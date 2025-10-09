@@ -130,6 +130,26 @@ type CreateNegotiationRequest struct {
 	UserId *int64 `json:"UserId" validate:"required"`
 }
 
+type LostNegotiation struct {
+	Motive    *string    `json:"motive" validate:"required"`
+	DateAlert *time.Time `json:"dateAlert" validate:"required"`
+
+	DateAlertMotive        *string `json:"dateAlertMotive" validate:"required"`
+	CustomerGotAnotherBoat *string `json:"customerGotAnotherBoat" validate:"required"`
+	WhichBoat              *string `json:"whichBoat" `
+	OurBoatOffered         *string `json:"OurBoatOffered"`
+}
+
+type NegotiationAlert struct {
+	Id            *int64  `json:"id"`
+	BusinessId    *int64  `json:"id_business"`
+	CustomerName  *string `json:"customer_name"`
+	CustomerPhone *string `json:"customer_phone"`
+
+	Motive string     `json:"motive"`
+	Date   *time.Time `json:"date"`
+}
+
 type AdvanceNegotiationRequest struct {
 	CurrentStage *int `json:"current_stage" validate:"required"`
 	NewStage     *int `json:"new_stage" validate:"required"`

@@ -72,6 +72,23 @@ func GetNegotiationHistory(c echo.Context) error {
 	})
 }
 
+func GetNegotiationsAlerts(c echo.Context) error {
+
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	data, err := repositories.GetNegotiationsAlerts(claims.Id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"data": data,
+	})
+}
+
 func GetNegotiations(c echo.Context) error {
 
 	claims, err := utils.GetLoggedInUserClaims(c)
@@ -495,6 +512,52 @@ func UpdateCustomer(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, echo.Map{
 		"message": "Customer updated successfully",
+	})
+}
+
+func ReactivateNegotiation(c echo.Context) error {
+	idParam := c.Param("id")
+
+	negID, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	err = repositories.ReactivateNegotiation(negID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Negotiations updated successfully",
+	})
+}
+
+func LostNegotiation(c echo.Context) error {
+	idParam := c.Param("id")
+
+	negT := new(models.LostNegotiation)
+
+	if err := c.Bind(negT); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request payload"+err.Error())
+	}
+
+	if err := c.Validate(negT); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
+	}
+
+	negID, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	err = repositories.LostNegotiation(negID, negT)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Negotiation updated successfully",
 	})
 }
 
