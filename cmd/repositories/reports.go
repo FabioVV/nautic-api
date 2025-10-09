@@ -12,7 +12,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func GetNegotiationsReport(pagenum string, limitPerPage string, name string, boat string) ([]models.NegotiationReport, int, error) {
+func GetNegotiationsReport(pagenum string, limitPerPage string, name string, boat string, dateIni string, dateEnd string) ([]models.NegotiationReport, int, error) {
 	db := storage.GetDB()
 
 	var negs []models.NegotiationReport
@@ -41,6 +41,18 @@ func GetNegotiationsReport(pagenum string, limitPerPage string, name string, boa
 	if boat != "" {
 		conds = append(conds, fmt.Sprintf("SB.boat_name ILIKE $%d", paramCount))
 		args = append(args, "%"+boat+"%")
+		paramCount++
+	}
+
+	if dateIni != "" {
+		conds = append(conds, fmt.Sprintf("SB.created_at >= $%d", paramCount))
+		args = append(args, dateIni)
+		paramCount++
+	}
+
+	if dateEnd != "" {
+		conds = append(conds, fmt.Sprintf("SB.created_at <= $%d", paramCount))
+		args = append(args, dateEnd)
 		paramCount++
 	}
 
@@ -147,7 +159,7 @@ func GetNegotiationsReport(pagenum string, limitPerPage string, name string, boa
 	return negs, numRecords, nil
 }
 
-func GetSalesOrdersReport(pagenum string, limitPerPage string, name string, boat string) ([]models.SalesOrdersReport, int, error) {
+func GetSalesOrdersReport(pagenum string, limitPerPage string, name string, boat string, dateIni string, dateEnd string) ([]models.SalesOrdersReport, int, error) {
 	db := storage.GetDB()
 
 	var negs []models.SalesOrdersReport
@@ -176,6 +188,17 @@ func GetSalesOrdersReport(pagenum string, limitPerPage string, name string, boat
 	if boat != "" {
 		conds = append(conds, fmt.Sprintf("C.boat_name ILIKE $%d", paramCount))
 		args = append(args, "%"+boat+"%")
+		paramCount++
+	}
+	if dateIni != "" {
+		conds = append(conds, fmt.Sprintf("SO.created_at >= $%d", paramCount))
+		args = append(args, dateIni)
+		paramCount++
+	}
+
+	if dateEnd != "" {
+		conds = append(conds, fmt.Sprintf("SO.created_at <= $%d", paramCount))
+		args = append(args, dateEnd)
 		paramCount++
 	}
 
@@ -234,6 +257,115 @@ func GetSalesOrdersReport(pagenum string, limitPerPage string, name string, boat
 		if err := rows.Scan(&curNeg.Id, &curNeg.CustomerId, &curNeg.UserId,
 			&curNeg.BusinessHistoryId, &curNeg.CustomerName, &curNeg.SellerName, &curNeg.Status, &curNeg.Done,
 			&curNeg.DiscountedAmount, &curNeg.TotalValue, &curNeg.CreatedAt, &curNeg.UpdatedAt, &curNeg.DeliveryAt); err != nil {
+			return nil, 0, fmt.Errorf("scan error: %w", err)
+		}
+
+		negs = append(negs, curNeg)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("rows error: %w", err)
+	}
+
+	return negs, numRecords, nil
+}
+
+func GetLostNegotiationsReport(pagenum string, limitPerPage string, name string, boat string, dateIni string, dateEnd string) ([]models.LostNegotiationReport, int, error) {
+	db := storage.GetDB()
+	var negs []models.LostNegotiationReport
+
+	pagenumber, err := strconv.Atoi(pagenum)
+	if err != nil {
+		return nil, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve report (PG1)")
+	}
+	limit, err := strconv.Atoi(limitPerPage)
+	if err != nil {
+		return nil, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve report (PG2)")
+	}
+
+	offset := (pagenumber - 1) * limit
+
+	conds := []string{}
+	args := []interface{}{}
+	paramCount := 1
+
+	if name != "" {
+		conds = append(conds, fmt.Sprintf("C.name ILIKE $%d", paramCount))
+		args = append(args, "%"+name+"%")
+		paramCount++
+	}
+
+	if boat != "" {
+		conds = append(conds, fmt.Sprintf("C.boat_name ILIKE $%d", paramCount))
+		args = append(args, "%"+boat+"%")
+		paramCount++
+	}
+
+	if dateIni != "" {
+		conds = append(conds, fmt.Sprintf("LN.created_at >= $%d", paramCount))
+		args = append(args, dateIni)
+		paramCount++
+	}
+
+	if dateEnd != "" {
+		conds = append(conds, fmt.Sprintf("LN.created_at <= $%d", paramCount))
+		args = append(args, dateEnd)
+		paramCount++
+	}
+
+	where := ""
+	if len(conds) > 0 {
+		where = "WHERE " + strings.Join(conds, " AND ")
+	}
+
+	args = append(args, limitPerPage, offset)
+	limitArgPos := paramCount
+	offsetArgPos := paramCount + 1
+
+	query := fmt.Sprintf(`
+		SELECT LN.id, 
+			LN.id_business,
+			C.name,
+			LN.motive, 
+			LN.customer_got_another_boat, 
+			LN.which_boat, 
+			LN.our_boat_offered, 
+			LN.created_at
+
+		FROM lost_negotiations AS LN
+		INNER JOIN so_business AS SB ON LN.id_business = SB.id
+		INNER JOIN customers AS C ON SB.id_customer = C.id
+	%s
+		ORDER BY LN.id
+		LIMIT $%d OFFSET $%d
+	`, where, limitArgPos, offsetArgPos)
+
+	rows, err := db.Query(query, args...)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return negs, 0, echo.NewHTTPError(http.StatusNotFound, "Lost negotiations not found")
+		}
+		return negs, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve lost negotiations")
+	}
+
+	queryTotalRecords := fmt.Sprintf(`
+	SELECT COUNT(1)
+
+		FROM lost_negotiations AS N
+
+	%s
+	`, where)
+	//println(queryTotalRecords)
+
+	rowsCount := db.QueryRow(queryTotalRecords, args...)
+	numRecords := 0
+	rowsCount.Scan(&numRecords)
+
+	for rows.Next() {
+		var curNeg models.LostNegotiationReport
+
+		if err := rows.Scan(&curNeg.Id, &curNeg.BusinessId, &curNeg.CustomerName, &curNeg.Motive, &curNeg.CustomerGotAnotherBoat, &curNeg.WhichBoat, &curNeg.OurBoatOffered, &curNeg.CreatedAt); err != nil {
 			return nil, 0, fmt.Errorf("scan error: %w", err)
 		}
 

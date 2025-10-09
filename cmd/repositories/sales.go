@@ -1048,9 +1048,9 @@ func UpdateCustomer(id int, cT *models.CustomerRequest) error {
 
 func ReactivateNegotiation(id int) error {
 	db := storage.GetDB()
-	query := `UPDATE so_business SET negotiation_active = $1, updated_at = NOW() WHERE id = $2`
+	query := `UPDATE so_business SET negotiation_active = 'Y', updated_at = NOW(), stage = 1 WHERE id = $1`
 
-	_, err := db.Exec(query, "Y", id)
+	_, err := db.Exec(query, id)
 	if err != nil {
 		return err
 	}

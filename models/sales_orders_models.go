@@ -68,3 +68,14 @@ type SalesOrderFile struct {
 type UpdateSalesOrderFileType struct {
 	Type *int `json:"type" validate:"required"`
 }
+
+type LostNegotiationReport struct {
+	Id                     *int64     `json:"id"`
+	BusinessId             *int64     `json:"id_business"`
+	CustomerName           *string    `json:"customer_name"`
+	Motive                 *string    `json:"motive"`
+	WhichBoat              *string    `json:"which_boat"`
+	OurBoatOffered         *string    `json:"our_boat_offered"`
+	CustomerGotAnotherBoat *string    `json:"customer_got_another_boat"`
+	CreatedAt              *time.Time `json:"created_at"`
+}
