@@ -162,6 +162,11 @@ func main() {
 
 	salOrdRoutes.GET("/:id/itens", sales.GetSalesOrderItens)
 
+	salOrdRoutes.POST("/:id/so-files", sales.UploadSalesOrderFile)
+	salOrdRoutes.GET("/:id/files", sales.GetSalesOrderFiles)
+	salOrdRoutes.DELETE("/:id/files/:id_file", sales.RemoveSalesOrderFile)
+	salOrdRoutes.PATCH("/:id/files/:id_file/change-type", sales.ChangeSalesOrderFileType)
+
 	salOrdRoutes.PATCH("/:id/boat/:id_boat", sales.UpdateBoatSalesOrder)
 	salOrdRoutes.PATCH("/:id/engine/:id_engine", sales.UpdateEngineSalesOrder)
 	salOrdRoutes.PATCH("/:id/accessory/:id_accessory", sales.UpdateAccessorySalesOrder)

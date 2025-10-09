@@ -58,3 +58,13 @@ type SalesOrderItem struct {
 type UpdateSalesOrderItemQty struct {
 	Qty *int64 `json:"qty"`
 }
+
+type SalesOrderFile struct {
+	Id   int64  `json:"id"`
+	Path string `json:"path"`
+	Type *int   `json:"type"`
+}
+
+type UpdateSalesOrderFileType struct {
+	Type *int `json:"type" validate:"required"`
+}

@@ -3,9 +3,14 @@ package repositories
 import (
 	"database/sql"
 	"fmt"
+	"io"
 	"nautic/cmd/storage"
 	"nautic/models"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
 )
@@ -136,4 +141,127 @@ func GetSalesOrderItens(salesOrderId int) ([]models.SalesOrderItem, error) {
 	}
 
 	return sos, nil
+}
+
+func ChangeSalesOrderFileType(salesOrderId int, fileId int, _type *models.UpdateSalesOrderFileType) error {
+	db := storage.GetDB()
+
+	query := "UPDATE sales_orders_files SET type = $1 WHERE id = $2 AND id_sales_order = $3"
+	_, err := db.Exec(query, _type.Type, fileId, salesOrderId)
+
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Could not update sales order file type")
+	}
+
+	return nil
+}
+
+func UploadSalesOrderFile(c echo.Context, id int) error {
+	db := storage.GetDB()
+	_, err := GetSalesOrder(int(id))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get sales order")
+	}
+
+	file, err := c.FormFile("file")
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "failed to get file from request")
+	}
+
+	src, err := file.Open()
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to open file")
+	}
+	defer src.Close()
+
+	uploadDir := filepath.Join(".", "uploads", "sales_orders", fmt.Sprintf("%d", id))
+	if err := os.MkdirAll(uploadDir, 0o755); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create upload directory")
+	}
+
+	ts := time.Now().Format("20060102_150405") // YYYYMMDD_HHMMSS
+	fname := filepath.Base(file.Filename)
+	fname = strings.ReplaceAll(fname, " ", "_")
+	dstName := fmt.Sprintf("so_%d_%s_%s", id, ts, fname)
+	dstPath := filepath.Join(uploadDir, dstName)
+
+	dst, err := os.Create(dstPath)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create destination file")
+	}
+	if _, err := io.Copy(dst, src); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to save file")
+	}
+
+	query := "INSERT INTO sales_orders_files (path, id_sales_order) VALUES ($1, $2)"
+
+	_, err = db.Exec(query, dstPath, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func GetSalesOrderFiles(salesOrderId int) ([]models.SalesOrderFile, error) {
+	db := storage.GetDB()
+	var soFiles []models.SalesOrderFile
+	query := `
+	SELECT SOF.id, SOF.path, SOF.type
+	FROM sales_orders_files AS SOF
+	WHERE SOF.id_sales_order = $1 AND SOF.soft_deleted = 'N'
+	ORDER BY SOF.id
+	`
+
+	rows, err := db.Query(query, salesOrderId)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return soFiles, echo.NewHTTPError(http.StatusNotFound, "Sales order files not found")
+		}
+		return soFiles, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve sales order files"+err.Error())
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var curSof models.SalesOrderFile
+		if err := rows.Scan(&curSof.Id, &curSof.Path, &curSof.Type); err != nil {
+			return nil, fmt.Errorf("scan error: %w", err)
+		}
+
+		curSof.Path = strings.ReplaceAll(curSof.Path, "\\", "/") // for windows paths
+		curSof.Path = "http://127.0.0.1:8080/" + curSof.Path
+		soFiles = append(soFiles, curSof)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows error: %w", err)
+	}
+
+	return soFiles, nil
+}
+
+func RemoveSalesOrderFile(salesOrderId int, fileId int) error {
+	db := storage.GetDB()
+	// var filePath string
+	// query := "SELECT path FROM sales_orders_files WHERE id = $1 AND id_sales_order = $2"
+	// err := db.QueryRow(query, fileId, salesOrderId).Scan(&filePath)
+	// if err != nil {
+	// 	if err == sql.ErrNoRows {
+	// 		return echo.NewHTTPError(http.StatusNotFound, "Sales order file not found")
+	// 	}
+	// 	return echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve sales order file"+err.Error())
+	// }
+
+	// err = os.Remove(filePath)
+	// if err != nil {
+	// 	return echo.NewHTTPError(http.StatusInternalServerError, "Could not remove sales order file"+err.Error())
+	// }
+
+	query := "UPDATE sales_orders_files SET soft_deleted = 'Y' WHERE id = $1 AND id_sales_order = $2"
+	_, err := db.Exec(query, fileId, salesOrderId)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Could not delete sales order file"+err.Error())
+	}
+
+	return nil
 }

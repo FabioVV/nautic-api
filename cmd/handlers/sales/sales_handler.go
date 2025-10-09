@@ -657,3 +657,93 @@ func GetSalesOrderItens(c echo.Context) error {
 		"data": data,
 	})
 }
+
+func ChangeSalesOrderFileType(c echo.Context) error {
+	idParam := c.Param("id")
+	idFileParam := c.Param("id_file")
+
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	idFile, err := strconv.Atoi(idFileParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid file ID format")
+	}
+
+	soFT := new(models.UpdateSalesOrderFileType)
+
+	if err := c.Bind(soFT); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request payload")
+	}
+
+	if err := c.Validate(soFT); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
+	}
+
+	err = repositories.ChangeSalesOrderFileType(id, idFile, soFT)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Sales order file type changed successfully",
+	})
+}
+
+func UploadSalesOrderFile(c echo.Context) error {
+	idParam := c.Param("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+	err = repositories.UploadSalesOrderFile(c, id)
+	if err != nil {
+		return err
+	}
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Sales order file uploaded successfully",
+	})
+}
+
+func GetSalesOrderFiles(c echo.Context) error {
+	idParam := c.Param("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	data, err := repositories.GetSalesOrderFiles(id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"data": data,
+	})
+}
+
+func RemoveSalesOrderFile(c echo.Context) error {
+	idParam := c.Param("id")
+	idFileParam := c.Param("id_file")
+
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	idFile, err := strconv.Atoi(idFileParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid file ID format")
+	}
+
+	err = repositories.RemoveSalesOrderFile(id, idFile)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Sales order file removed successfully",
+	})
+}
