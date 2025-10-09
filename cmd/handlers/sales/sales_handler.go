@@ -234,6 +234,42 @@ func UpdateBoatSalesOrder(c echo.Context) error {
 	})
 }
 
+func UpgradeQuoteToSalesOrder(c echo.Context) error {
+	idParam := c.Param("id")
+
+	soID, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	err = repositories.UpgradeQuoteToSalesOrder(soID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Sales order updated successfully",
+	})
+}
+
+func CancelSalesOrder(c echo.Context) error {
+	idParam := c.Param("id")
+
+	soID, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	err = repositories.CancelSalesOrder(soID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Sales order updated successfully",
+	})
+}
+
 func UpdateEngineSalesOrder(c echo.Context) error {
 	idParam := c.Param("id")
 	idParamEngine := c.Param("id_engine")
@@ -249,6 +285,30 @@ func UpdateEngineSalesOrder(c echo.Context) error {
 	}
 
 	err = repositories.UpdateEngineSalesOrder(soID, engID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Sales order updated successfully",
+	})
+}
+
+func RemoveAccessorySalesOrder(c echo.Context) error {
+	idParam := c.Param("id")
+	idParamAccessory := c.Param("id_accessory")
+
+	soID, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	accID, err := strconv.Atoi(idParamAccessory)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	err = repositories.RemoveAccessorySalesOrder(soID, accID)
 	if err != nil {
 		return err
 	}

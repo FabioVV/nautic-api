@@ -150,11 +150,15 @@ func main() {
 	salOrdRoutes.Use(nmiddleware.CheckRoleAndPermissions)
 	salOrdRoutes.POST("/negotiations/history/:id", sales.InsertSalesOrder)
 	salOrdRoutes.GET("/:id", sales.GetSalesOrder)
+	salOrdRoutes.DELETE("/:id", sales.CancelSalesOrder)
+	salOrdRoutes.DELETE("/:id/accessory/:id_accessory", sales.RemoveAccessorySalesOrder)
+
 	salOrdRoutes.GET("/:id/itens", sales.GetSalesOrderItens)
 
 	salOrdRoutes.PATCH("/:id/boat/:id_boat", sales.UpdateBoatSalesOrder)
 	salOrdRoutes.PATCH("/:id/engine/:id_engine", sales.UpdateEngineSalesOrder)
 	salOrdRoutes.PATCH("/:id/accessory/:id_accessory", sales.UpdateAccessorySalesOrder)
+	salOrdRoutes.PATCH("/:id/upgrade-quote", sales.UpgradeQuoteToSalesOrder)
 
 	/*SALES ORDERS ROUTES*/
 

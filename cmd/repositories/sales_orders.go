@@ -49,7 +49,8 @@ func GetSalesOrder(salesOrderId int) (models.SalesOrder, error) {
 	(SELECT id_engine FROM sales_orders_itens WHERE id_sales_order = SO.id AND id_engine IS NOT NULL ) AS order_engine_id,
 	(SELECT id_boat FROM sales_orders_itens WHERE id_sales_order = SO.id AND id_boat IS NOT NULL ) AS order_boat_id,
 	(SELECT EE.model FROM sales_orders_itens AS SOIi INNER JOIN engines AS EE ON SOIi.id_engine = EE.id WHERE id_sales_order = SO.id AND SOIi.id_engine IS NOT NULL ) AS order_engine_model,
-	(SELECT BB.model FROM sales_orders_itens AS SOIi INNER JOIN boats AS BB ON SOIi.id_boat = BB.id WHERE id_sales_order = SO.id AND SOIi.id_boat IS NOT NULL ) AS order_boat_model
+	(SELECT BB.model FROM sales_orders_itens AS SOIi INNER JOIN boats AS BB ON SOIi.id_boat = BB.id WHERE id_sales_order = SO.id AND SOIi.id_boat IS NOT NULL ) AS order_boat_model,
+	(SELECT SUM(SOIi.unit_price * SOIi.qty) FROM sales_orders_itens AS SOIi WHERE SOIi.id_boat IS NULL AND SOIi.id_engine IS NULL ) AS total_price_itens
 
 	FROM sales_orders AS SO 
 	INNER JOIN business_histories AS BHI ON SO.id_business_history = BHI.id
@@ -88,9 +89,10 @@ func GetSalesOrder(salesOrderId int) (models.SalesOrder, error) {
 		&so.OrderBoatId,
 		&so.OrderEngineModel,
 		&so.OrderBoatModel,
+		&so.TotalItensPrice,
 	)
 	if err != nil {
-		return so, echo.NewHTTPError(http.StatusInternalServerError, "Internal server error (db)"+err.Error())
+		return so, echo.NewHTTPError(http.StatusInternalServerError, "Internal server error (db)")
 	}
 
 	return so, nil

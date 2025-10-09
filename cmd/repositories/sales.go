@@ -461,8 +461,9 @@ func GetNegotiationHistory(id_business int, id_user int) ([]models.NegotiationHi
         SELECT 1
         FROM sales_orders as SO
         WHERE SO.id_business_history = BIH.id 
-    ) AS has_sales_order
-
+    ) AS has_sales_order,
+	(SELECT status FROM sales_orders WHERE id = BIH.id_sales_order) AS sales_order_canceled,
+	(SELECT done FROM sales_orders WHERE id = BIH.id_sales_order) AS sales_order_finished
 
 	FROM business_histories AS BIH
 
@@ -508,7 +509,10 @@ func GetNegotiationHistory(id_business int, id_user int) ([]models.NegotiationHi
 		var curNegH models.NegotiationHistory
 
 		if err := rows.Scan(&curNegH.Id, &curNegH.UserId, &curNegH.CustomerId, &curNegH.ComMeanId,
-			&curNegH.Description, &curNegH.Stage, &curNegH.DateCreated, &curNegH.CustomerName, &curNegH.MeamComName, &curNegH.BusinessId, &curNegH.NegotiationActive, &curNegH.SalesOrderId, &curNegH.HasSalesOrder); err != nil {
+			&curNegH.Description, &curNegH.Stage, &curNegH.DateCreated, &curNegH.CustomerName,
+			&curNegH.MeamComName, &curNegH.BusinessId,
+			&curNegH.NegotiationActive, &curNegH.SalesOrderId,
+			&curNegH.HasSalesOrder, &curNegH.SalesOrderCanceled, &curNegH.SalesOrderFinished); err != nil {
 			return nil, 0, fmt.Errorf("scan error: %w", err)
 		}
 
@@ -1085,6 +1089,56 @@ func UpdateNegotiation(id int, negT *models.CreateNegotiationRequest) error {
 	return nil
 }
 
+func UpgradeQuoteToSalesOrder(id int) error {
+	db := storage.GetDB()
+
+	var status string = ""
+	query := `SELECT status FROM sales_orders WHERE id = $1`
+	db.QueryRow(query, id).Scan(&status)
+
+	query = `UPDATE sales_orders SET status = $1 WHERE id = $2`
+
+	if status == "NQ" {
+		_, err := db.Exec(query, "NO", id)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	return echo.NewHTTPError(http.StatusBadRequest, "Sales order cannot be upgraded to order")
+}
+
+func CancelSalesOrder(id int) error {
+	db := storage.GetDB()
+
+	var status string = ""
+	query := `SELECT status FROM sales_orders WHERE id = $1`
+	db.QueryRow(query, id).Scan(&status)
+
+	query = `UPDATE sales_orders SET status = $1 WHERE id = $2`
+	switch status {
+	case "NQ":
+		_, err := db.Exec(query, "QC", id)
+		if err != nil {
+			return err
+		}
+	case "NO ":
+		_, err := db.Exec(query, "OC", id)
+		if err != nil {
+			return err
+		}
+	default:
+		_, err := db.Exec(query, "QC", id)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func UpdateEngineSalesOrder(id int, id_engine int) error {
 	db := storage.GetDB()
 
@@ -1142,6 +1196,24 @@ func UpdateBoatSalesOrder(id int, id_boat int) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func RemoveAccessorySalesOrder(id int, id_accessory int) error {
+	db := storage.GetDB()
+
+	_, err := GetAccessory(id_accessory)
+	if err != nil {
+		return err
+	}
+
+	query := `DELETE FROM sales_orders_itens WHERE id_accessory = $1 AND id_sales_order = $2`
+
+	_, err = db.Exec(query, id_accessory, id)
+	if err != nil {
+		return err
 	}
 
 	return nil

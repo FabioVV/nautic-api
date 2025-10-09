@@ -21,6 +21,8 @@ type SalesOrder struct {
 	OrderBoatPrice   *float64 `json:"OrderBoatPrice"`
 	OrderEnginePrice *float64 `json:"OrderEnginePrice"`
 
+	TotalItensPrice *float64 `json:"TotalItensPrice"`
+
 	SellerName *string `json:"seller_name"`
 
 	PfPj         *string `json:"PfPj" validate:"required"`
@@ -43,9 +45,9 @@ type SalesOrder struct {
 }
 
 type SalesOrderItem struct {
-	Id          *int64   `json:"id"`
-	AccessoryId *int64   `json:"id_accessory"`
-	Model       *float64 `json:"model"`
+	Id          *int64  `json:"id"`
+	AccessoryId *int64  `json:"id_accessory"`
+	Model       *string `json:"model"`
 
 	UnitPrice       *float64 `json:"unit_price"`
 	Quantity        *int64   `json:"qty"`

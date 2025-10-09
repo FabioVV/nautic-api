@@ -102,6 +102,9 @@ type NegotiationHistory struct {
 	BusinessId        *int64    `json:"id_business"`
 	SalesOrderId      *int64    `json:"id_sales_order"`
 	HasSalesOrder     *bool     `json:"has_sales_order"`
+
+	SalesOrderCanceled *string `json:"sales_order_canceled"`
+	SalesOrderFinished *string `json:"sales_order_finished"`
 }
 
 type CreateNegotiationRequest struct {
