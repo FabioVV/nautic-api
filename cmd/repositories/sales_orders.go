@@ -55,7 +55,7 @@ func GetSalesOrder(salesOrderId int) (models.SalesOrder, error) {
 	(SELECT id_boat FROM sales_orders_itens WHERE id_sales_order = SO.id AND id_boat IS NOT NULL ) AS order_boat_id,
 	(SELECT EE.model FROM sales_orders_itens AS SOIi INNER JOIN engines AS EE ON SOIi.id_engine = EE.id WHERE id_sales_order = SO.id AND SOIi.id_engine IS NOT NULL ) AS order_engine_model,
 	(SELECT BB.model FROM sales_orders_itens AS SOIi INNER JOIN boats AS BB ON SOIi.id_boat = BB.id WHERE id_sales_order = SO.id AND SOIi.id_boat IS NOT NULL ) AS order_boat_model,
-	(SELECT SUM(SOIi.unit_price * SOIi.qty) FROM sales_orders_itens AS SOIi WHERE SOIi.id_boat IS NULL AND SOIi.id_engine IS NULL ) AS total_price_itens
+	(SELECT SUM(SOIi.unit_price * SOIi.qty) FROM sales_orders_itens AS SOIi WHERE SOIi.id_sales_order = SO.id AND SOIi.id_boat IS NULL AND SOIi.id_engine IS NULL ) AS total_price_itens
 
 	FROM sales_orders AS SO 
 	INNER JOIN business_histories AS BHI ON SO.id_business_history = BHI.id
@@ -146,8 +146,17 @@ func GetSalesOrderItens(salesOrderId int) ([]models.SalesOrderItem, error) {
 func ChangeSalesOrderFileType(salesOrderId int, fileId int, _type *models.UpdateSalesOrderFileType) error {
 	db := storage.GetDB()
 
+	salesOr, err := GetSalesOrder(salesOrderId)
+	if err != nil {
+		return err
+	}
+
+	if *salesOr.StatusType != "Orçamento cancelado" && *salesOr.StatusType != "Pedido cancelado" && *salesOr.StatusType != "Pedido concluído" {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Sales order cant be updated")
+	}
+
 	query := "UPDATE sales_orders_files SET type = $1 WHERE id = $2 AND id_sales_order = $3"
-	_, err := db.Exec(query, _type.Type, fileId, salesOrderId)
+	_, err = db.Exec(query, _type.Type, fileId, salesOrderId)
 
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Could not update sales order file type")
@@ -158,9 +167,13 @@ func ChangeSalesOrderFileType(salesOrderId int, fileId int, _type *models.Update
 
 func UploadSalesOrderFile(c echo.Context, id int) error {
 	db := storage.GetDB()
-	_, err := GetSalesOrder(int(id))
+	salesOr, err := GetSalesOrder(int(id))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get sales order")
+	}
+
+	if *salesOr.StatusType != "Orçamento cancelado" && *salesOr.StatusType != "Pedido cancelado" && *salesOr.StatusType != "Pedido concluído" {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Sales order cant be updated")
 	}
 
 	file, err := c.FormFile("file")
@@ -257,8 +270,17 @@ func RemoveSalesOrderFile(salesOrderId int, fileId int) error {
 	// 	return echo.NewHTTPError(http.StatusInternalServerError, "Could not remove sales order file"+err.Error())
 	// }
 
+	salesOr, err := GetSalesOrder(salesOrderId)
+	if err != nil {
+		return err
+	}
+
+	if *salesOr.StatusType != "Orçamento cancelado" && *salesOr.StatusType != "Pedido cancelado" && *salesOr.StatusType != "Pedido concluído" {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Sales order cant be updated")
+	}
+
 	query := "UPDATE sales_orders_files SET soft_deleted = 'Y' WHERE id = $1 AND id_sales_order = $2"
-	_, err := db.Exec(query, fileId, salesOrderId)
+	_, err = db.Exec(query, fileId, salesOrderId)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Could not delete sales order file"+err.Error())
 	}

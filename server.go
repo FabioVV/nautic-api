@@ -171,7 +171,6 @@ func main() {
 	salOrdRoutes.PATCH("/:id/engine/:id_engine", sales.UpdateEngineSalesOrder)
 	salOrdRoutes.PATCH("/:id/accessory/:id_accessory", sales.UpdateAccessorySalesOrder)
 	salOrdRoutes.PATCH("/:id/upgrade-quote", sales.UpgradeQuoteToSalesOrder)
-	salOrdRoutes.PATCH("/:id/upgrade-quote", sales.UpgradeQuoteToSalesOrder)
 	salOrdRoutes.PATCH("/:id/accessory/:id_accessory/change-qty", sales.UpdateAccessoryQtySalesOrder)
 
 	/*SALES ORDERS ROUTES*/

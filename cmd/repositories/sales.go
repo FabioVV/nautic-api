@@ -1204,6 +1204,15 @@ func UpdateNegotiation(id int, negT *models.CreateNegotiationRequest) error {
 func UpgradeQuoteToSalesOrder(id int) error {
 	db := storage.GetDB()
 
+	salesOr, err := GetSalesOrder(id)
+	if err != nil {
+		return err
+	}
+
+	if *salesOr.StatusType != "Orçamento cancelado" && *salesOr.StatusType != "Pedido cancelado" && *salesOr.StatusType != "Pedido concluído" {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Sales order cant be updated")
+	}
+
 	var status string = ""
 	query := `SELECT status FROM sales_orders WHERE id = $1`
 	db.QueryRow(query, id).Scan(&status)
@@ -1259,6 +1268,15 @@ func UpdateEngineSalesOrder(id int, id_engine int) error {
 		return err
 	}
 
+	salesOr, err := GetSalesOrder(id)
+	if err != nil {
+		return err
+	}
+
+	if *salesOr.StatusType != "Orçamento cancelado" && *salesOr.StatusType != "Pedido cancelado" && *salesOr.StatusType != "Pedido concluído" {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Sales order cant be updated")
+	}
+
 	var id_check int = 0
 	query := `SELECT id FROM sales_orders_itens WHERE id_engine = $1 AND id_sales_order = $2`
 	db.QueryRow(query, id_engine, id).Scan(&id_check)
@@ -1288,6 +1306,15 @@ func UpdateBoatSalesOrder(id int, id_boat int) error {
 	boat, err := GetBoat(id_boat)
 	if err != nil {
 		return err
+	}
+
+	salesOr, err := GetSalesOrder(id)
+	if err != nil {
+		return err
+	}
+
+	if *salesOr.StatusType != "Orçamento cancelado" && *salesOr.StatusType != "Pedido cancelado" && *salesOr.StatusType != "Pedido concluído" {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Sales order cant be updated")
 	}
 
 	var id_check int = 0
@@ -1339,6 +1366,15 @@ func UpdateAccessoryQtySalesOrder(id int, id_accessory int, update *models.Updat
 		return err
 	}
 
+	salesOr, err := GetSalesOrder(id)
+	if err != nil {
+		return err
+	}
+
+	if *salesOr.StatusType != "Orçamento cancelado" && *salesOr.StatusType != "Pedido cancelado" && *salesOr.StatusType != "Pedido concluído" {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Sales order cant be updated")
+	}
+
 	var id_check int = 0
 	query := `SELECT id FROM sales_orders_itens WHERE id_accessory = $1 AND id_sales_order = $2`
 	db.QueryRow(query, id_accessory, id).Scan(&id_check)
@@ -1362,6 +1398,15 @@ func UpdateAccessorySalesOrder(id int, id_accessory int) error {
 	acc, err := GetAccessory(id_accessory)
 	if err != nil {
 		return err
+	}
+
+	salesOr, err := GetSalesOrder(id)
+	if err != nil {
+		return err
+	}
+
+	if *salesOr.StatusType != "Orçamento cancelado" && *salesOr.StatusType != "Pedido cancelado" && *salesOr.StatusType != "Pedido concluído" {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Sales order cant be updated")
 	}
 
 	var id_check int = 0
