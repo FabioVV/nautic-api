@@ -33,12 +33,12 @@ func GetSalesOrdersReport(c echo.Context) error {
 	qpage := c.QueryParams().Get("pageNumber")
 	qperpage := c.QueryParams().Get("perPage")
 	qname := c.QueryParams().Get("name")
-	qpboat := c.QueryParams().Get("boat")
+	qseller := c.QueryParams().Get("seller")
 
 	qdateIni := c.QueryParams().Get("dateIni")
 	qdateEnd := c.QueryParams().Get("dateEnd")
 
-	data, numRecords, err := repositories.GetSalesOrdersReport(qpage, qperpage, qname, qpboat, qdateIni, qdateEnd)
+	data, numRecords, err := repositories.GetSalesOrdersReport(qpage, qperpage, qname, qseller, qdateIni, qdateEnd)
 	if err != nil {
 		return err
 	}

@@ -159,7 +159,7 @@ func GetNegotiationsReport(pagenum string, limitPerPage string, name string, boa
 	return negs, numRecords, nil
 }
 
-func GetSalesOrdersReport(pagenum string, limitPerPage string, name string, boat string, dateIni string, dateEnd string) ([]models.SalesOrdersReport, int, error) {
+func GetSalesOrdersReport(pagenum string, limitPerPage string, name string, seller string, dateIni string, dateEnd string) ([]models.SalesOrdersReport, int, error) {
 	db := storage.GetDB()
 
 	var negs []models.SalesOrdersReport
@@ -185,9 +185,9 @@ func GetSalesOrdersReport(pagenum string, limitPerPage string, name string, boat
 		paramCount++
 	}
 
-	if boat != "" {
-		conds = append(conds, fmt.Sprintf("C.boat_name ILIKE $%d", paramCount))
-		args = append(args, "%"+boat+"%")
+	if seller != "" {
+		conds = append(conds, fmt.Sprintf("U.name ILIKE $%d", paramCount))
+		args = append(args, "%"+seller+"%")
 		paramCount++
 	}
 	if dateIni != "" {
@@ -212,18 +212,21 @@ func GetSalesOrdersReport(pagenum string, limitPerPage string, name string, boat
 	offsetArgPos := paramCount + 1
 
 	query := fmt.Sprintf(`
-		SELECT SO.id, BH.id_customer, BH.id_user, BH.id, C.name, U.name, 
-		SO.status, SO.done, SO.discounted_amount, SO.total_value, SO.created_at, SO.updated_at, SO.delivery_at
+		SELECT DISTINCT ON (SO.id)
+	 	COALESCE(SUM(SOI.unit_price * SOI.qty) OVER (PARTITION BY SO.id), 0) AS order_total_price,
+		SO.id, BH.id_customer, BH.id_user, BH.id, C.name, U.name, 
+		SO.status, SO.done, SO.discounted_amount, SO.created_at, SO.updated_at, SO.delivery_at
 
 		FROM sales_orders AS SO
 
 		INNER JOIN business_histories AS BH ON SO.id_business_history = BH.id
 		INNER JOIN customers AS C ON BH.id_customer = C.id
 		INNER JOIN users AS U ON BH.id_user = U.id
+		LEFT JOIN sales_orders_itens AS SOI ON SO.id = SOI.id_sales_order
 
-	%s
-	ORDER BY SO.id
-	LIMIT $%d OFFSET $%d
+		%s
+		ORDER BY SO.id
+		LIMIT $%d OFFSET $%d
 	`, where, limitArgPos, offsetArgPos)
 
 	rows, err := db.Query(query, args...)
@@ -254,9 +257,9 @@ func GetSalesOrdersReport(pagenum string, limitPerPage string, name string, boat
 	for rows.Next() {
 		var curNeg models.SalesOrdersReport
 
-		if err := rows.Scan(&curNeg.Id, &curNeg.CustomerId, &curNeg.UserId,
+		if err := rows.Scan(&curNeg.TotalValue, &curNeg.Id, &curNeg.CustomerId, &curNeg.UserId,
 			&curNeg.BusinessHistoryId, &curNeg.CustomerName, &curNeg.SellerName, &curNeg.Status, &curNeg.Done,
-			&curNeg.DiscountedAmount, &curNeg.TotalValue, &curNeg.CreatedAt, &curNeg.UpdatedAt, &curNeg.DeliveryAt); err != nil {
+			&curNeg.DiscountedAmount, &curNeg.CreatedAt, &curNeg.UpdatedAt, &curNeg.DeliveryAt); err != nil {
 			return nil, 0, fmt.Errorf("scan error: %w", err)
 		}
 

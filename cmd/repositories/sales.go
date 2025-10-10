@@ -532,10 +532,10 @@ func GetNegotiationsAlerts(userId int) ([]models.NegotiationAlert, error) {
 	var negs []models.NegotiationAlert
 
 	conds := []string{}
-	args := []interface{}{}
+	args := []any{}
 	paramCount := 1
 
-	conds = append(conds, fmt.Sprintf("C.id_user = $%d", paramCount))
+	conds = append(conds, fmt.Sprintf("C.id_user = $%d AND NA.date = DATE(CURRENT_TIMESTAMP)", paramCount))
 	args = append(args, userId)
 	paramCount++
 
