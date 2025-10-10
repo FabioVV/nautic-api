@@ -14,6 +14,7 @@ import (
 	auth_h "nautic/cmd/handlers/auth"
 	"nautic/cmd/handlers/products"
 	"nautic/cmd/handlers/reports"
+	"nautic/cmd/handlers/roles"
 	"nautic/cmd/handlers/sales"
 	"nautic/cmd/handlers/users"
 
@@ -63,13 +64,18 @@ func main() {
 	userRoutes.DELETE("/:id", users.DeactivateUser)
 	/*USER ROUTES*/
 
-	/*PERMISSIONS/ROLES ROUTES*/
-	permsRoutes := apiv1.Group("/permissions")
-	permsRoutes.Use(echojwt.WithConfig(configJwt))
-	permsRoutes.Use(nmiddleware.CheckRoleAndPermissions)
-	permsRoutes.GET("", auth_h.GetPermissions)
+	/*ROLES ROUTES*/
+	rolesRoutes := apiv1.Group("/roles")
+	rolesRoutes.Use(echojwt.WithConfig(configJwt))
+	rolesRoutes.Use(nmiddleware.CheckRoleAndPermissions)
 
-	/*PERMISSIONS/ROLES ROUTES*/
+	rolesRoutes.POST("", roles.InsertRole)
+	rolesRoutes.GET("", roles.GetRoles)
+	rolesRoutes.GET("/:id", roles.GetRole)
+	rolesRoutes.DELETE("/:id", roles.DeleteRole)
+	rolesRoutes.PATCH("/:id", roles.UpdateRole)
+
+	/*ROLES ROUTES*/
 
 	/*ENGINES ROUTES*/
 	enginesRoutes := apiv1.Group("/engines")

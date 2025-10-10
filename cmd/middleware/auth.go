@@ -28,7 +28,7 @@ func CheckRoleAndPermissions(next echo.HandlerFunc) echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to parse user credentials claims"})
 		}
 
-		if len(claims.Roles) > 0 && claims.Roles[0] == "admin" {
+		if len(claims.Roles) > 0 && claims.Roles[0] == "Admin" {
 			return next(c)
 		}
 

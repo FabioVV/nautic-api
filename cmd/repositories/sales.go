@@ -13,7 +13,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func UpdateComMean(id int, mcR *models.UpdateCommunicationMeaneRequest) error {
+func UpdateComMean(id int, mcR *models.UpdateCommunicationMeanRequest) error {
 	db := storage.GetDB()
 
 	mc, err := GetComMean(id)

@@ -8,10 +8,10 @@ type LoginRequest struct {
 }
 
 type Role struct {
-	Id        int64     `json:"id"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	Id        *int64     `json:"id"`
+	Name      *string    `json:"name"`
+	CreatedAt *time.Time `json:"created_at"`
+	UpdatedAt *time.Time `json:"updated_at"`
 }
 
 type Permission struct {
@@ -21,4 +21,8 @@ type Permission struct {
 	Active      string    `json:"active"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+type CreateRole struct {
+	Name *string `json:"Name" validate:"required"`
 }

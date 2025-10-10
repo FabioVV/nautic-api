@@ -184,7 +184,7 @@ func GetComMeans(c echo.Context) error {
 func UpdateComMeans(c echo.Context) error {
 	idParam := c.Param("id")
 
-	accT := new(models.UpdateCommunicationMeaneRequest)
+	accT := new(models.UpdateCommunicationMeanRequest)
 
 	if err := c.Bind(accT); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request payload")

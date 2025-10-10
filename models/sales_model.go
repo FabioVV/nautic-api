@@ -167,7 +167,7 @@ type CreateCommunicationMeanRequest struct {
 	Name string `json:"name" validate:"required"`
 }
 
-type UpdateCommunicationMeaneRequest struct {
+type UpdateCommunicationMeanRequest struct {
 	Name *string `json:"name" validate:"required"`
 }
 
