@@ -31,7 +31,6 @@ func InsertRole(c echo.Context) error {
 }
 
 func GetRoles(c echo.Context) error {
-
 	qpage := c.QueryParams().Get("pageNumber")
 	qperpage := c.QueryParams().Get("perPage")
 	qname := c.QueryParams().Get("name")
@@ -48,12 +47,30 @@ func GetRoles(c echo.Context) error {
 	})
 }
 
+func GetRolePermissions(c echo.Context) error {
+	idParam := c.Param("id")
+
+	rID, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	roles, err := repositories.GetRolePermissions(rID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"data": roles,
+	})
+}
+
 func GetRole(c echo.Context) error {
 	idParam := c.Param("id")
 
 	rID, err := strconv.Atoi(idParam)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID format")
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
 	role, err := repositories.GetRole(rID)

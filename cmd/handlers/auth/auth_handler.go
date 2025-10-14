@@ -18,15 +18,13 @@ import (
 )
 
 func GetPermissions(c echo.Context) error {
-
 	perms, err := repositories.GetPermissions()
 	if err != nil {
 		return err
 	}
 
 	return c.JSON(http.StatusOK, echo.Map{
-		"data":         perms,
-		"totalRecords": 100,
+		"data": perms,
 	})
 }
 

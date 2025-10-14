@@ -14,13 +14,23 @@ type Role struct {
 	UpdatedAt *time.Time `json:"updated_at"`
 }
 
+type RolePermission struct {
+	PermissionId *int64 `json:"id_permission"`
+	RoleID       *int64 `json:"id_role"`
+
+	Module      *string `json:"module"`
+	Description *string `json:"description"`
+	RoleName    *string `json:"name"`
+
+	HasPermission *bool `json:"has_permission"`
+}
+
 type Permission struct {
-	Id          int64     `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Active      string    `json:"active"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	Id          *int64  `json:"id"`
+	Module      *string `json:"module"`
+	Code        *string `json:"code"`
+	Description *string `json:"description"`
+	Url         *string `json:"url"`
 }
 
 type CreateRole struct {

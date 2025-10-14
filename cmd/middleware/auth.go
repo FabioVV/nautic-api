@@ -10,11 +10,31 @@ import (
 )
 
 var RoutesPermissions = map[string]string{
-	"POST:/api/v1/users":       "users:create",
-	"GET:/api/v1/users":        "users:view",
-	"GET:/api/v1/users/:id":    "users:view",
-	"PATCH:/api/v1/users/:id":  "users:update",
-	"DELETE:/api/v1/users/:id": "users:delete",
+	// "POST:/api/v1/users":       "users:create",
+	// "GET:/api/v1/users/:id":    "users:view",
+	// "PATCH:/api/v1/users/:id":  "users:update",
+	// "DELETE:/api/v1/users/:id": "users:delete",
+
+	//sistema
+	"GET:/api/v1/users": "users:view",
+	"GET:/api/v1/roles": "roles:view",
+
+	//vendas
+	"GET:/api/v1/sales/oportunities":        "sales_oportunities:view",
+	"GET:/api/v1/sales/customers":           "sales_customers:view",
+	"GET:/api/v1/sales/negotiations":        "negotiation_panel:view",
+	"GET:/api/v1/sales/communication-means": "communication_means:view",
+
+	//produtos
+	"GET:/api/v1/accessories/types": "accessories_types:view",
+	"GET:/api/v1/accessories":       "accessories:view",
+	"GET:/api/v1/boats":             "pboats:view",
+	"GET:/api/v1/engines":           "engines:view",
+
+	//relatorios
+	"GET:/api/v1/reports/negotiations":      "reports_negotiations:view",
+	"GET:/api/v1/reports/sales-orders":      "reports_sales_orders:view",
+	"GET:/api/v1/reports/lost-negotiations": "reports_lost_negotiations:view",
 }
 
 func CheckRoleAndPermissions(next echo.HandlerFunc) echo.HandlerFunc {

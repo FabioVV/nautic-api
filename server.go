@@ -72,10 +72,20 @@ func main() {
 	rolesRoutes.POST("", roles.InsertRole)
 	rolesRoutes.GET("", roles.GetRoles)
 	rolesRoutes.GET("/:id", roles.GetRole)
+	rolesRoutes.GET("/:id/permissions", roles.GetRolePermissions)
+
 	rolesRoutes.DELETE("/:id", roles.DeleteRole)
 	rolesRoutes.PATCH("/:id", roles.UpdateRole)
 
 	/*ROLES ROUTES*/
+
+	/*PERMISSION ROUTES*/
+	permsRoutes := apiv1.Group("/permissions")
+	permsRoutes.Use(echojwt.WithConfig(configJwt))
+	permsRoutes.Use(nmiddleware.CheckRoleAndPermissions)
+
+	permsRoutes.GET("", auth_h.GetPermissions)
+	/*PERMISSION ROUTES*/
 
 	/*ENGINES ROUTES*/
 	enginesRoutes := apiv1.Group("/engines")

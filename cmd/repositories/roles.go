@@ -34,6 +34,49 @@ func InsertRole(role *models.CreateRole) error {
 	return nil
 }
 
+func GetRolePermissions(id int) ([]models.RolePermission, error) {
+	db := storage.GetDB()
+
+	var perms []models.RolePermission
+
+	query := `
+	SELECT
+		P.id,
+		R.id,
+		P.module,
+		P.description,
+		R.name,
+		CASE WHEN RP.id_permission IS NULL THEN FALSE ELSE TRUE END AS has_permission
+	FROM permissions AS P
+
+	LEFT JOIN roles_permissions AS RP ON RP.id_permission = P.id AND RP.id_role = $1
+	LEFT JOIN roles AS R ON RP.id_role = R.id
+
+	ORDER BY P.module
+	`
+
+	rows, err := db.Query(query, id)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return perms, echo.NewHTTPError(http.StatusNotFound, "Permissions not found")
+		}
+		return perms, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve permissions")
+	}
+
+	for rows.Next() {
+		var curPerm models.RolePermission
+		rows.Scan(&curPerm.PermissionId, &curPerm.RoleID, &curPerm.Module, &curPerm.Description, &curPerm.RoleName, &curPerm.HasPermission)
+		perms = append(perms, curPerm)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows error: %w", err)
+	}
+
+	return perms, nil
+}
+
 func GetRoles(pagenum string, limitPerPage string, name string, showAdmin string) ([]models.Role, int, error) {
 	db := storage.GetDB()
 
@@ -83,7 +126,6 @@ func GetRoles(pagenum string, limitPerPage string, name string, showAdmin string
 	ORDER BY R.id, R.name
 	LIMIT $%d OFFSET $%d
 	`, where, limitArgPos, offsetArgPos)
-	println(query)
 
 	rows, err := db.Query(query, args...)
 
