@@ -34,7 +34,7 @@ func InsertRole(role *models.CreateRole) error {
 	return nil
 }
 
-func GetRoles(pagenum string, limitPerPage string, name string) ([]models.Role, int, error) {
+func GetRoles(pagenum string, limitPerPage string, name string, showAdmin string) ([]models.Role, int, error) {
 	db := storage.GetDB()
 
 	pagenumber, err := strconv.Atoi(pagenum)
@@ -60,9 +60,11 @@ func GetRoles(pagenum string, limitPerPage string, name string) ([]models.Role, 
 		paramCount++
 	}
 
-	conds = append(conds, fmt.Sprintf("LOWER(R.name) <> LOWER($%d)", paramCount))
-	args = append(args, "admin")
-	paramCount++
+	if showAdmin == "N" {
+		conds = append(conds, fmt.Sprintf("LOWER(R.name) <> LOWER($%d)", paramCount))
+		args = append(args, "admin")
+		paramCount++
+	}
 
 	where := ""
 	if len(conds) > 0 {
@@ -81,6 +83,7 @@ func GetRoles(pagenum string, limitPerPage string, name string) ([]models.Role, 
 	ORDER BY R.id, R.name
 	LIMIT $%d OFFSET $%d
 	`, where, limitArgPos, offsetArgPos)
+	println(query)
 
 	rows, err := db.Query(query, args...)
 
@@ -88,7 +91,7 @@ func GetRoles(pagenum string, limitPerPage string, name string) ([]models.Role, 
 		if err == sql.ErrNoRows {
 			return roles, 0, echo.NewHTTPError(http.StatusNotFound, "Roles not found")
 		}
-		return roles, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve roles")
+		return roles, 0, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve roles"+err.Error())
 	}
 
 	queryTotalRecords := fmt.Sprintf(`

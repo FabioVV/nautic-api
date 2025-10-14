@@ -35,8 +35,9 @@ func GetRoles(c echo.Context) error {
 	qpage := c.QueryParams().Get("pageNumber")
 	qperpage := c.QueryParams().Get("perPage")
 	qname := c.QueryParams().Get("name")
+	qshow_admin := c.QueryParams().Get("show_admin")
 
-	roles, numRecords, err := repositories.GetRoles(qpage, qperpage, qname)
+	roles, numRecords, err := repositories.GetRoles(qpage, qperpage, qname, qshow_admin)
 	if err != nil {
 		return err
 	}
