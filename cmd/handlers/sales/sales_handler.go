@@ -622,6 +622,19 @@ func UpdateNegotiationAdvanceStage(c echo.Context) error {
 	})
 }
 
+func GetSalesOrderQuote(c echo.Context) error {
+	idParam := c.Param("id")
+
+	data, err := repositories.GetSalesOrderQuote(idParam)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"data": data,
+	})
+}
+
 func GetSalesOrder(c echo.Context) error {
 	idParam := c.Param("id")
 

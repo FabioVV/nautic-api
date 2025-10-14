@@ -3,9 +3,10 @@ package models
 import "time"
 
 type SalesOrder struct {
-	Id         *int64 `json:"id"`
-	CustomerId *int64 `json:"id_customer"`
-	UserId     *int64 `json:"id_user"` // seller
+	Id         *int64  `json:"id"`
+	CustomerId *int64  `json:"id_customer"`
+	UserId     *int64  `json:"id_user"` // seller
+	Uuid       *string `json:"uuid"`
 
 	StatusType *string `json:"status_type"`
 
@@ -45,7 +46,8 @@ type SalesOrder struct {
 }
 
 type SalesOrderItem struct {
-	Id          *int64  `json:"id"`
+	Id *int64 `json:"id"`
+
 	AccessoryId *int64  `json:"id_accessory"`
 	Model       *string `json:"model"`
 

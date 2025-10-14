@@ -173,6 +173,8 @@ func main() {
 	salOrdRoutes.Use(nmiddleware.CheckRoleAndPermissions)
 	salOrdRoutes.POST("/negotiations/history/:id", sales.InsertSalesOrder)
 	salOrdRoutes.GET("/:id", sales.GetSalesOrder)
+	salOrdRoutes.GET("/:id/quote", sales.GetSalesOrderQuote)
+
 	salOrdRoutes.DELETE("/:id", sales.CancelSalesOrder)
 	salOrdRoutes.DELETE("/:id/accessory/:id_accessory", sales.RemoveAccessorySalesOrder)
 
