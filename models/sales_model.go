@@ -80,9 +80,9 @@ type Negotiation struct {
 	MaxPesBoat   *string `json:"boat_length_max"`
 	MinPesBoat   *string `json:"boat_length_min"`
 
-	Stage         int64  `json:"stage"`
-	Qualified     string `json:"qualified"`
-	QualifiedType string `json:"qualified_type"`
+	Stage         int64   `json:"stage"`
+	Qualified     string  `json:"qualified"`
+	QualifiedType *string `json:"qualified_type"`
 
 	HasPassed24Hrs *bool `json:"has_passed_24hrs"`
 	CustomerScore  *int  `json:"customer_score"`

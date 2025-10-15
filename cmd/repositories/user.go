@@ -49,9 +49,11 @@ func GetUserRoles(id int) ([]string, error) {
 func GetUserPermissions(id int) ([]string, error) {
 	db := storage.GetDB()
 
-	query := `SELECT UP.code
+	query := `SELECT P.code
 	FROM user_permissions AS UP
 	INNER JOIN users AS U ON UP.id_user = U.id AND U.active = 'Y'
+	LEFT JOIN permissions AS P ON UP.id_permission = P.id
+
 	WHERE UP.id_user = $1
 	`
 
@@ -194,14 +196,31 @@ func InsertUser(user *models.CreateUserRequest) error {
 	if err != nil {
 		return err
 	}
-	query := "INSERT INTO users (name, email, phone, password_hash) VALUES ($1, $2, $3, $4)"
 
-	_, err = db.Exec(query, user.Name, user.Email, user.Phone, hashedPassword)
+	query := "INSERT INTO users (name, email, phone, password_hash) VALUES ($1, $2, $3, $4) RETURNING ID"
+
+	var id int64 = 0
+	err = db.QueryRow(query, user.Name, user.Email, user.Phone, hashedPassword).Scan(&id)
 	if err != nil {
 		if errU, ok := utils.CheckForError("unique_email", err); ok {
 			return echo.NewHTTPError(errU.HttpErrCode, errU)
 		}
 		return err
+	}
+
+	rolePermissions, err := GetRolePermissionsByName(user.Role)
+	if err != nil {
+		return err
+	}
+
+	if len(rolePermissions) > 0 && id != 0 {
+		for _, k := range rolePermissions {
+			query := "INSERT INTO user_permissions (id_user, id_permission) VALUES ($1, $2)"
+			_, err = db.Exec(query, id, k.PermissionId)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil

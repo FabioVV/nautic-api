@@ -74,6 +74,9 @@ func main() {
 	rolesRoutes.GET("/:id", roles.GetRole)
 	rolesRoutes.GET("/:id/permissions", roles.GetRolePermissions)
 
+	rolesRoutes.PATCH("/:id/permissions/:id_perm", roles.InsertRolePermission)
+	rolesRoutes.DELETE("/:id/permissions/:id_perm", roles.RemoveRolePermission)
+
 	rolesRoutes.DELETE("/:id", roles.DeleteRole)
 	rolesRoutes.PATCH("/:id", roles.UpdateRole)
 

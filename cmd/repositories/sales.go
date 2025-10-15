@@ -909,7 +909,7 @@ func GetNegotiation(id int) (models.Negotiation, error) {
 		if err == sql.ErrNoRows {
 			return curNeg, echo.NewHTTPError(http.StatusNotFound, "Negotiation not found")
 		}
-		return curNeg, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve negotiation")
+		return curNeg, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve negotiation"+err.Error())
 	}
 
 	return curNeg, nil
@@ -1209,7 +1209,7 @@ func UpgradeQuoteToSalesOrder(id int) error {
 		return err
 	}
 
-	if *salesOr.StatusType != "Orçamento cancelado" && *salesOr.StatusType != "Pedido cancelado" && *salesOr.StatusType != "Pedido concluído" {
+	if *salesOr.StatusType == "Orçamento cancelado" || *salesOr.StatusType == "Pedido cancelado" || *salesOr.StatusType == "Pedido concluído" {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Sales order cant be updated")
 	}
 
@@ -1273,7 +1273,7 @@ func UpdateEngineSalesOrder(id int, id_engine int) error {
 		return err
 	}
 
-	if *salesOr.StatusType != "Orçamento cancelado" && *salesOr.StatusType != "Pedido cancelado" && *salesOr.StatusType != "Pedido concluído" {
+	if *salesOr.StatusType == "Orçamento cancelado" || *salesOr.StatusType == "Pedido cancelado" || *salesOr.StatusType == "Pedido concluído" {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Sales order cant be updated")
 	}
 
@@ -1313,7 +1313,7 @@ func UpdateBoatSalesOrder(id int, id_boat int) error {
 		return err
 	}
 
-	if *salesOr.StatusType != "Orçamento cancelado" && *salesOr.StatusType != "Pedido cancelado" && *salesOr.StatusType != "Pedido concluído" {
+	if *salesOr.StatusType == "Orçamento cancelado" || *salesOr.StatusType == "Pedido cancelado" || *salesOr.StatusType == "Pedido concluído" {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Sales order cant be updated")
 	}
 
@@ -1371,7 +1371,7 @@ func UpdateAccessoryQtySalesOrder(id int, id_accessory int, update *models.Updat
 		return err
 	}
 
-	if *salesOr.StatusType != "Orçamento cancelado" && *salesOr.StatusType != "Pedido cancelado" && *salesOr.StatusType != "Pedido concluído" {
+	if *salesOr.StatusType == "Orçamento cancelado" || *salesOr.StatusType == "Pedido cancelado" || *salesOr.StatusType == "Pedido concluído" {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Sales order cant be updated")
 	}
 
@@ -1405,7 +1405,7 @@ func UpdateAccessorySalesOrder(id int, id_accessory int) error {
 		return err
 	}
 
-	if *salesOr.StatusType != "Orçamento cancelado" && *salesOr.StatusType != "Pedido cancelado" && *salesOr.StatusType != "Pedido concluído" {
+	if *salesOr.StatusType == "Orçamento cancelado" || *salesOr.StatusType == "Pedido cancelado" || *salesOr.StatusType == "Pedido concluído" {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Sales order cant be updated")
 	}
 

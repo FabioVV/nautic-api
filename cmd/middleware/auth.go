@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"slices"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
@@ -55,10 +56,8 @@ func CheckRoleAndPermissions(next echo.HandlerFunc) echo.HandlerFunc {
 		routePermissionKey := c.Request().Method + ":" + c.Path()
 		routePermission := RoutesPermissions[routePermissionKey]
 
-		for _, perm := range claims.Permissions {
-			if routePermission == perm {
-				next(c)
-			}
+		if slices.Contains(claims.Permissions, routePermission) {
+			return next(c)
 		}
 
 		return c.JSON(http.StatusUnauthorized, echo.Map{"message": "User does not have permission for the requested resource"})

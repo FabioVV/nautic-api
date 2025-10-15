@@ -34,6 +34,51 @@ func InsertRole(role *models.CreateRole) error {
 	return nil
 }
 
+func GetRolePermissionsByName(name string) ([]models.RolePermission, error) {
+	db := storage.GetDB()
+
+	var perms []models.RolePermission
+
+	query := `
+	SELECT
+		P.id,
+		R.id,
+		P.module,
+		P.description,
+		R.name,
+		CASE WHEN RP.id_permission IS NULL THEN FALSE ELSE TRUE END AS has_permission
+	FROM permissions AS P
+
+	LEFT JOIN roles_permissions AS RP ON RP.id_permission = P.id
+	LEFT JOIN roles AS R ON RP.id_role = R.id AND R.name = $1
+
+	WHERE R.ID IS NOT NULL
+
+	ORDER BY P.module
+	`
+
+	rows, err := db.Query(query, name)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return perms, nil
+		}
+		return perms, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve permissions")
+	}
+
+	for rows.Next() {
+		var curPerm models.RolePermission
+		rows.Scan(&curPerm.PermissionId, &curPerm.RoleID, &curPerm.Module, &curPerm.Description, &curPerm.RoleName, &curPerm.HasPermission)
+		perms = append(perms, curPerm)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows error: %w", err)
+	}
+
+	return perms, nil
+}
+
 func GetRolePermissions(id int) ([]models.RolePermission, error) {
 	db := storage.GetDB()
 
@@ -159,6 +204,22 @@ func GetRoles(pagenum string, limitPerPage string, name string, showAdmin string
 	return roles, numRecords, nil
 }
 
+func GetRoleByName(name string) (models.Role, error) {
+	db := storage.GetDB()
+
+	var role models.Role
+	query := `SELECT id, name, created_at, updated_at FROM roles WHERE name = $1`
+
+	if err := db.QueryRow(query, name).Scan(&role.Id, &role.Name, &role.CreatedAt, &role.UpdatedAt); err != nil {
+		if err == sql.ErrNoRows {
+			return role, echo.NewHTTPError(http.StatusNotFound, "Role not found")
+		}
+		return role, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve role")
+	}
+
+	return role, nil
+}
+
 func GetRole(id int) (models.Role, error) {
 	db := storage.GetDB()
 
@@ -173,6 +234,24 @@ func GetRole(id int) (models.Role, error) {
 	}
 
 	return role, nil
+}
+
+func RemoveRolePermission(idRole int, idPerm int) error {
+	db := storage.GetDB()
+
+	_, err := GetRole(idRole)
+	if err != nil {
+		return err
+	}
+
+	query := `DELETE FROM roles_permissions WHERE id_role = $1 AND id_permission = $2`
+
+	_, err = db.Exec(query, idRole, idPerm)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func DeleteRole(id int) error {
@@ -191,7 +270,24 @@ func DeleteRole(id int) error {
 	}
 
 	return nil
+}
 
+func InsertRolePermission(idRole int, idPerm int) error {
+	db := storage.GetDB()
+
+	_, err := GetRole(idRole)
+	if err != nil {
+		return err
+	}
+
+	query := `INSERT INTO roles_permissions(id_role, id_permission) VALUES ($1, $2)`
+
+	_, err = db.Exec(query, idRole, idPerm)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func UpdateRole(id int, rM *models.CreateRole) error {

@@ -243,7 +243,7 @@ func ChangeSalesOrderFileType(salesOrderId int, fileId int, _type *models.Update
 		return err
 	}
 
-	if *salesOr.StatusType != "Orçamento cancelado" && *salesOr.StatusType != "Pedido cancelado" && *salesOr.StatusType != "Pedido concluído" {
+	if *salesOr.StatusType == "Orçamento cancelado" || *salesOr.StatusType == "Pedido cancelado" || *salesOr.StatusType == "Pedido concluído" {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Sales order cant be updated")
 	}
 
