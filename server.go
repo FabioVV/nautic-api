@@ -60,6 +60,11 @@ func main() {
 	userRoutes.POST("", users.InsertUser)
 	userRoutes.GET("", users.GetUsers)
 	userRoutes.GET("/:id", users.GetUser)
+	userRoutes.GET("/:id/permissions", users.GetUserPermissions)
+
+	userRoutes.PATCH("/:id/permissions/:id_perm", users.InsertUserPermission)
+	userRoutes.DELETE("/:id/permissions/:id_perm", users.RemoveUserPermission)
+
 	userRoutes.PATCH("/:id", users.UpdateUser)
 	userRoutes.DELETE("/:id", users.DeactivateUser)
 	/*USER ROUTES*/

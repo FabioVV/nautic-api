@@ -14,6 +14,16 @@ type Role struct {
 	UpdatedAt *time.Time `json:"updated_at"`
 }
 
+type UserPermission struct {
+	PermissionId     *int64 `json:"id_permission"`
+	UserPermissionID *int64 `json:"id_role"`
+
+	Module      *string `json:"module"`
+	Description *string `json:"description"`
+
+	HasPermission *bool `json:"has_permission"`
+}
+
 type RolePermission struct {
 	PermissionId *int64 `json:"id_permission"`
 	RoleID       *int64 `json:"id_role"`

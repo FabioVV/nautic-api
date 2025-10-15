@@ -32,6 +32,72 @@ func InsertUser(c echo.Context) error {
 	})
 }
 
+func GetUserPermissions(c echo.Context) error {
+	idParam := c.Param("id")
+
+	rID, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	roles, err := repositories.GetUserPermissions__(rID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"data": roles,
+	})
+}
+
+func RemoveUserPermission(c echo.Context) error {
+	idParam := c.Param("id")
+	idParamPerm := c.Param("id_perm")
+
+	userId, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	permId, err := strconv.Atoi(idParamPerm)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	err = repositories.RemoveUserPermission(userId, permId)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "user permission removed successfully",
+	})
+}
+
+func InsertUserPermission(c echo.Context) error {
+	idParam := c.Param("id")
+	idParamPerm := c.Param("id_perm")
+
+	roleId, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	permId, err := strconv.Atoi(idParamPerm)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	err = repositories.InsertUserPermission(roleId, permId)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "user updated successfully",
+	})
+}
+
 func GetUser(c echo.Context) error {
 	idParam := c.Param("id")
 

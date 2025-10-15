@@ -46,6 +46,73 @@ func GetUserRoles(id int) ([]string, error) {
 	return roles, nil
 }
 
+func GetUserPermissions__(id int) ([]models.UserPermission, error) {
+	db := storage.GetDB()
+
+	query := `
+
+	SELECT
+		P.id,
+		UP.id,
+		P.module,
+		P.description,
+		CASE WHEN UP.id_permission IS NULL THEN FALSE ELSE TRUE END AS has_permission
+	FROM permissions AS P
+
+	LEFT JOIN user_permissions AS UP ON UP.id_permission = P.id AND UP.id_user = $1
+
+	ORDER BY P.module
+	`
+
+	var perms []models.UserPermission
+
+	rows, err := db.Query(query, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return perms, nil
+		}
+		return perms, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve user permissions")
+	}
+
+	for rows.Next() {
+		var curPerm models.UserPermission
+		rows.Scan(&curPerm.PermissionId, &curPerm.UserPermissionID, &curPerm.Module, &curPerm.Description, &curPerm.HasPermission)
+		perms = append(perms, curPerm)
+	}
+
+	if rows.Err() != nil {
+		return perms, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve user permissions")
+	}
+
+	return perms, nil
+}
+
+func RemoveUserPermission(idUser int, idPerm int) error {
+	db := storage.GetDB()
+
+	query := `DELETE FROM user_permissions WHERE id_user = $1 AND id_permission = $2`
+
+	_, err := db.Exec(query, idUser, idPerm)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func InsertUserPermission(idUser int, idPerm int) error {
+	db := storage.GetDB()
+
+	query := `INSERT INTO user_permissions(id_user, id_permission) VALUES ($1, $2)`
+
+	_, err := db.Exec(query, idUser, idPerm)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func GetUserPermissions(id int) ([]string, error) {
 	db := storage.GetDB()
 
