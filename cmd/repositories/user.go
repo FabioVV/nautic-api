@@ -280,13 +280,25 @@ func InsertUser(user *models.CreateUserRequest) error {
 		return err
 	}
 
-	if len(rolePermissions) > 0 && id != 0 {
+	if len(rolePermissions) > 0 && id != 0 || user.Role == "Admin" {
 		for _, k := range rolePermissions {
 			query := "INSERT INTO user_permissions (id_user, id_permission) VALUES ($1, $2)"
 			_, err = db.Exec(query, id, k.PermissionId)
 			if err != nil {
 				return err
 			}
+		}
+
+		role, err := GetRoleByName(user.Role)
+		if err != nil {
+			return err
+		}
+
+		queryRole := "INSERT INTO user_roles (user_id, role_id) VALUES ($1, $2)"
+		role, _ = GetRoleByName(user.Role)
+		_, err = db.Exec(queryRole, id, role.Id)
+		if err != nil {
+			return err
 		}
 	}
 

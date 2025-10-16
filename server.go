@@ -181,7 +181,17 @@ func main() {
 	salOrdRoutes.Use(nmiddleware.CheckRoleAndPermissions)
 	salOrdRoutes.POST("/negotiations/history/:id", sales.InsertSalesOrder)
 	salOrdRoutes.GET("/:id", sales.GetSalesOrder)
-	salOrdRoutes.GET("/:id/quote", sales.GetSalesOrderQuote)
+	//salOrdRoutes.GET("/:id/quote", sales.GetSalesOrderQuote)
+
+	/*SALES ORDERS ROUTES QUOTES*/
+	quoteRoutes := apiv1.Group("/sales/orders/:id/quote") // NO AUTH
+	// permsRoutes.Use(echojwt.WithConfig(configJwt))
+	// permsRoutes.Use(nmiddleware.CheckRoleAndPermissions)
+	quoteRoutes.GET("", sales.GetSalesOrderQuote)
+	quoteRoutes.GET("/itens", sales.GetSalesOrderItens)
+	quoteRoutes.GET("/files", sales.GetSalesOrderQuoteBoatFiles)
+
+	/*SALES ORDERS ROUTES QUOTES*/
 
 	salOrdRoutes.DELETE("/:id", sales.CancelSalesOrder)
 	salOrdRoutes.DELETE("/:id/accessory/:id_accessory", sales.RemoveAccessorySalesOrder)

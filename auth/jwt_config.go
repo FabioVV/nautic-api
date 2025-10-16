@@ -1,7 +1,9 @@
 package auth
 
 import (
+	"net/http"
 	"os"
+	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt/v4"
@@ -22,6 +24,13 @@ func GetJwtConfig() echojwt.Config {
 			return new(JwtCustomClaims)
 		},
 		SigningKey: []byte(os.Getenv("JWT_SECRET")),
+		Skipper: func(c echo.Context) bool {
+			// allow GET /orders/:id/quote without auth
+			if c.Request().Method == http.MethodGet && strings.HasSuffix(c.Path(), "/quote") {
+				return true
+			}
+			return false
+		},
 	}
 	return config
 }

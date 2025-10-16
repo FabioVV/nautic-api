@@ -3,6 +3,7 @@ package middleware
 import (
 	"net/http"
 	"slices"
+	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
@@ -33,13 +34,19 @@ var RoutesPermissions = map[string]string{
 	"GET:/api/v1/engines":           "engines:view",
 
 	//relatorios
-	"GET:/api/v1/reports/negotiations":      "reports_negotiations:view",
-	"GET:/api/v1/reports/sales-orders":      "reports_sales_orders:view",
-	"GET:/api/v1/reports/lost-negotiations": "reports_lost_negotiations:view",
+	"GET:/api/v1/sales/reports/negotiations":      "reports_negotiations:view",
+	"GET:/api/v1/sales/reports/sales-orders":      "reports_sales_orders:view",
+	"GET:/api/v1/sales/reports/lost-negotiations": "reports_lost_negotiations:view",
 }
 
 func CheckRoleAndPermissions(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
+
+		// allow GET /orders/:id/quote without auth
+		if c.Request().Method == http.MethodGet && strings.HasSuffix(c.Path(), "/quote") {
+			return next(c)
+		}
+
 		user, ok := c.Get("user").(*jwt.Token)
 		if !ok {
 			return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to parse user credentials"})

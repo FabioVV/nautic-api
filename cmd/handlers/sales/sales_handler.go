@@ -737,6 +737,23 @@ func GetSalesOrderFiles(c echo.Context) error {
 	})
 }
 
+func GetSalesOrderQuoteBoatFiles(c echo.Context) error {
+	idParam := c.Param("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	data, err := repositories.GetSalesOrderQuoteBoatFiles(id)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"data": data,
+	})
+}
+
 func RemoveSalesOrderFile(c echo.Context) error {
 	idParam := c.Param("id")
 	idFileParam := c.Param("id_file")

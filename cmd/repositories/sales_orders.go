@@ -308,6 +308,45 @@ func UploadSalesOrderFile(c echo.Context, id int) error {
 	return nil
 }
 
+func GetSalesOrderQuoteBoatFiles(salesOrderId int) ([]models.BoatFile, error) {
+	db := storage.GetDB()
+	var files []models.BoatFile
+
+	var boatId int = 0
+	queryBoat := `
+		SELECT id_boat 
+		FROM sales_orders_itens 
+		WHERE id_boat IS NOT NULL AND id_sales_order = $1
+	`
+	db.QueryRow(queryBoat, salesOrderId).Scan(&boatId)
+
+	query := `
+	SELECT BF.id, BF.path 
+	FROM boat_files AS BF
+	WHERE BF.id_boat = $1 AND BF.soft_deleted = 'N'
+	ORDER BY BF.id
+	`
+	rows, err := db.Query(query, boatId)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return files, echo.NewHTTPError(http.StatusNotFound, "Boat files not found")
+		}
+		return files, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve boat files")
+	}
+
+	for rows.Next() {
+		var curFile models.BoatFile
+		rows.Scan(&curFile.Id, &curFile.Path)
+
+		*curFile.Path = strings.ReplaceAll(*curFile.Path, "\\", "/") // for windows paths
+		*curFile.Path = "http://127.0.0.1:8080/" + *curFile.Path
+		files = append(files, curFile)
+	}
+
+	return files, nil
+}
+
 func GetSalesOrderFiles(salesOrderId int) ([]models.SalesOrderFile, error) {
 	db := storage.GetDB()
 	var soFiles []models.SalesOrderFile
