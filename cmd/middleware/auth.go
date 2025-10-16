@@ -63,6 +63,10 @@ func CheckRoleAndPermissions(next echo.HandlerFunc) echo.HandlerFunc {
 		routePermissionKey := c.Request().Method + ":" + c.Path()
 		routePermission := RoutesPermissions[routePermissionKey]
 
+		if routePermission == "" { //#FIXME WORKAROUND FOR ROUTES THAT DONT HAVE PERMISSIONS SET
+			return next(c)
+		}
+
 		if slices.Contains(claims.Permissions, routePermission) {
 			return next(c)
 		}
