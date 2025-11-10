@@ -3,6 +3,7 @@ package repositories
 import (
 	"database/sql"
 	"fmt"
+	"nautic/cmd/audit"
 	"nautic/cmd/storage"
 	"nautic/cmd/utils"
 	"nautic/models"
@@ -14,7 +15,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func GetUserRoles(id int) ([]string, error) {
+func GetUserRoles(id int, id_user int) ([]string, error) {
 	db := storage.GetDB()
 
 	query := `SELECT R.name
@@ -43,10 +44,12 @@ func GetUserRoles(id int) ([]string, error) {
 		return []string{}, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve user roles")
 	}
 
+	_ = audit.InsertLog(id_user, "/signin", "GET", fmt.Sprintf("GET request on user roles for login"), query)
+
 	return roles, nil
 }
 
-func GetUserPermissions__(id int) ([]models.UserPermission, error) {
+func GetUserPermissions__(id int, id_user int) ([]models.UserPermission, error) {
 	db := storage.GetDB()
 
 	query := `
@@ -84,6 +87,8 @@ func GetUserPermissions__(id int) ([]models.UserPermission, error) {
 		return perms, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve user permissions")
 	}
 
+	_ = audit.InsertLog(id_user, "/signin", "GET", fmt.Sprintf("GET request on user roles permissions for login"), query)
+
 	return perms, nil
 }
 
@@ -97,6 +102,8 @@ func RemoveUserPermission(idUser int, idPerm int) error {
 		return err
 	}
 
+	_ = audit.InsertLog(idUser, "/users/:id/permissions/:id_perm", "DELETE", fmt.Sprintf("DELETE request on user of id %d to remove permission", idUser), query)
+
 	return nil
 }
 
@@ -109,11 +116,12 @@ func InsertUserPermission(idUser int, idPerm int) error {
 	if err != nil {
 		return err
 	}
+	_ = audit.InsertLog(idUser, "/users/:id/permissions/:id_perm", "POST", fmt.Sprintf("POST request on user of id %d roles permissions for login", idUser), query)
 
 	return nil
 }
 
-func GetUserPermissions(id int) ([]string, error) {
+func GetUserPermissions(id int, id_user int) ([]string, error) {
 	db := storage.GetDB()
 
 	query := `SELECT P.code
@@ -144,10 +152,12 @@ func GetUserPermissions(id int) ([]string, error) {
 		return []string{}, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve user permissions")
 	}
 
+	_ = audit.InsertLog(id_user, "/users/:id/permissions", "GET", fmt.Sprintf("GET request on user of id %d roles permissions for login", id), query)
+
 	return permissions, nil
 }
 
-func GetUser(id int) (models.User, error) {
+func GetUser(id int, id_user int) (models.User, error) {
 	db := storage.GetDB()
 
 	var user models.User
@@ -160,10 +170,12 @@ func GetUser(id int) (models.User, error) {
 		return user, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve user")
 	}
 
+	_ = audit.InsertLog(id_user, "/users/:id", "GET", fmt.Sprintf("GET request on user of id %d ", id), query)
+
 	return user, nil
 }
 
-func GetUsers(pagenum string, limitPerPage string, name string, email string, active string) ([]models.User, int, error) {
+func GetUsers(id_user int, pagenum string, limitPerPage string, name string, email string, active string) ([]models.User, int, error) {
 	db := storage.GetDB()
 
 	pagenumber, err := strconv.Atoi(pagenum)
@@ -249,10 +261,12 @@ func GetUsers(pagenum string, limitPerPage string, name string, email string, ac
 		return nil, 0, fmt.Errorf("rows error: %w", err)
 	}
 
+	_ = audit.InsertLog(id_user, "/users", "GET", fmt.Sprintf("GET request on users"), query)
+
 	return users, numRecords, nil
 }
 
-func InsertUser(user *models.CreateUserRequest) error {
+func InsertUser(user *models.CreateUserRequest, id_user int) error {
 	db := storage.GetDB()
 
 	if errMsg, ok := utils.IsGoodPassword(user.Password); !ok {
@@ -275,7 +289,7 @@ func InsertUser(user *models.CreateUserRequest) error {
 		return err
 	}
 
-	rolePermissions, err := GetRolePermissionsByName(user.Role)
+	rolePermissions, err := GetRolePermissionsByName(user.Role, id_user)
 	if err != nil {
 		return err
 	}
@@ -289,26 +303,28 @@ func InsertUser(user *models.CreateUserRequest) error {
 			}
 		}
 
-		role, err := GetRoleByName(user.Role)
+		role, err := GetRoleByName(user.Role, id_user)
 		if err != nil {
 			return err
 		}
 
 		queryRole := "INSERT INTO user_roles (user_id, role_id) VALUES ($1, $2)"
-		role, _ = GetRoleByName(user.Role)
+		role, _ = GetRoleByName(user.Role, id_user)
 		_, err = db.Exec(queryRole, id, role.Id)
 		if err != nil {
 			return err
 		}
 	}
 
+	_ = audit.InsertLog(id_user, "/users", "POST", fmt.Sprintf("POST request on users"), query)
+
 	return nil
 }
 
-func UpdateUser(id int, user *models.UpdateUserRequest) error {
+func UpdateUser(id int, id_user int, user *models.UpdateUserRequest) error {
 	db := storage.GetDB()
 
-	_, err := GetUser(id)
+	_, err := GetUser(id, id_user)
 	if err != nil {
 		return err
 	}
@@ -354,13 +370,15 @@ func UpdateUser(id int, user *models.UpdateUserRequest) error {
 		return err
 	}
 
+	_ = audit.InsertLog(id_user, "/users", "UPDATE", fmt.Sprintf("UPDATE request on user of id %d", id), query)
+
 	return nil
 }
 
-func DeactivateUser(id int) error {
+func DeactivateUser(id int, id_user int) error {
 	db := storage.GetDB()
 
-	_, err := GetUser(id)
+	_, err := GetUser(id, id_user)
 	if err != nil {
 		return err
 	}
@@ -372,6 +390,7 @@ func DeactivateUser(id int) error {
 		return err
 	}
 
-	return nil
+	_ = audit.InsertLog(id_user, "/users", "DELETE", fmt.Sprintf("DELETE request on user of id %d", id), query)
 
+	return nil
 }

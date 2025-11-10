@@ -20,7 +20,12 @@ func GetCustomer(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	acc, err := repositories.GetCustomer(cID)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	acc, err := repositories.GetCustomer(cID, claims.Id)
 	if err != nil {
 		return err
 	}
@@ -38,7 +43,12 @@ func GetNegotiation(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	acc, err := repositories.GetNegotiation(negID)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	acc, err := repositories.GetNegotiation(claims.Id, negID)
 	if err != nil {
 		return err
 	}
@@ -120,7 +130,12 @@ func GetCustomerNegotiationsHistories(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	data, numRecords, err := repositories.GetCustomerNegotiationsHistories(id)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	data, numRecords, err := repositories.GetCustomerNegotiationsHistories(claims.Id, id)
 	if err != nil {
 		return err
 	}
@@ -132,7 +147,12 @@ func GetCustomerNegotiationsHistories(c echo.Context) error {
 }
 
 func GetCustomersBirthday(c echo.Context) error {
-	data, numRecords, err := repositories.GetCustomersBirthday()
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	data, numRecords, err := repositories.GetCustomersBirthday(claims.Id)
 	if err != nil {
 		return err
 	}
@@ -152,7 +172,12 @@ func GetCustomers(c echo.Context) error {
 	qphone := c.QueryParams().Get("phone")
 	qpboat := c.QueryParams().Get("boat")
 
-	data, numRecords, err := repositories.GetCustomers(qpage, qperpage, qname, qemail, qphone, qpboat)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	data, numRecords, err := repositories.GetCustomers(claims.Id, qpage, qperpage, qname, qemail, qphone, qpboat)
 	if err != nil {
 		return err
 	}
@@ -170,7 +195,12 @@ func GetComMeans(c echo.Context) error {
 	qname := c.QueryParams().Get("name")
 	qactive := c.QueryParams().Get("active")
 
-	data, numRecords, err := repositories.GetComMeans(qpage, qperpage, qname, qactive)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	data, numRecords, err := repositories.GetComMeans(claims.Id, qpage, qperpage, qname, qactive)
 	if err != nil {
 		return err
 	}
@@ -199,7 +229,12 @@ func UpdateComMeans(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID format")
 	}
 
-	err = repositories.UpdateComMean(accTID, accT)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.UpdateComMean(accTID, claims.Id, accT)
 	if err != nil {
 		return err
 	}
@@ -217,7 +252,12 @@ func DeactivateComMeans(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	err = repositories.DeactivateComMean(accTID)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.DeactivateComMean(accTID, claims.Id)
 	if err != nil {
 		return err
 	}
@@ -241,7 +281,12 @@ func UpdateBoatSalesOrder(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	err = repositories.UpdateBoatSalesOrder(soID, boatID)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.UpdateBoatSalesOrder(claims.Id, soID, boatID)
 	if err != nil {
 		return err
 	}
@@ -259,7 +304,12 @@ func UpgradeQuoteToSalesOrder(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	err = repositories.UpgradeQuoteToSalesOrder(soID)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.UpgradeQuoteToSalesOrder(claims.Id, soID)
 	if err != nil {
 		return err
 	}
@@ -277,7 +327,12 @@ func CancelSalesOrder(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	err = repositories.CancelSalesOrder(soID)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.CancelSalesOrder(claims.Id, soID)
 	if err != nil {
 		return err
 	}
@@ -301,7 +356,12 @@ func UpdateEngineSalesOrder(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	err = repositories.UpdateEngineSalesOrder(soID, engID)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.UpdateEngineSalesOrder(claims.Id, soID, engID)
 	if err != nil {
 		return err
 	}
@@ -325,7 +385,12 @@ func RemoveAccessorySalesOrder(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	err = repositories.RemoveAccessorySalesOrder(soID, accID)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.RemoveAccessorySalesOrder(claims.Id, soID, accID)
 	if err != nil {
 		return err
 	}
@@ -359,7 +424,12 @@ func UpdateAccessoryQtySalesOrder(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
 	}
 
-	err = repositories.UpdateAccessoryQtySalesOrder(soID, accID, accQty)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.UpdateAccessoryQtySalesOrder(claims.Id, soID, accID, accQty)
 	if err != nil {
 		return err
 	}
@@ -383,7 +453,12 @@ func UpdateAccessorySalesOrder(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	err = repositories.UpdateAccessorySalesOrder(soID, accID)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.UpdateAccessorySalesOrder(claims.Id, soID, accID)
 	if err != nil {
 		return err
 	}
@@ -396,12 +471,17 @@ func UpdateAccessorySalesOrder(c echo.Context) error {
 func InsertSalesOrder(c echo.Context) error {
 	idParam := c.Param("id")
 
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
 	id, err := strconv.Atoi(idParam)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	if err := repositories.InsertSalesOrderUsingBusinessHistory(id); err != nil {
+	if err := repositories.InsertSalesOrderUsingBusinessHistory(id, claims.Id); err != nil {
 		return err
 	}
 
@@ -421,7 +501,12 @@ func InsertComMeans(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
 	}
 
-	if err := repositories.InsertComMeans(accT); err != nil {
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	if err := repositories.InsertComMeans(claims.Id, accT); err != nil {
 		return err
 	}
 
@@ -478,7 +563,12 @@ func InsertNegotiation(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
 	}
 
-	if err := repositories.InsertNegotiation(neg); err != nil {
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	if err := repositories.InsertNegotiation(claims.Id, neg); err != nil {
 		return err
 	}
 
@@ -505,7 +595,12 @@ func UpdateCustomer(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	err = repositories.UpdateCustomer(accTID, cT)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.UpdateCustomer(claims.Id, accTID, cT)
 	if err != nil {
 		return err
 	}
@@ -523,7 +618,12 @@ func ReactivateNegotiation(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	err = repositories.ReactivateNegotiation(negID)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.ReactivateNegotiation(claims.Id, negID)
 	if err != nil {
 		return err
 	}
@@ -551,7 +651,12 @@ func LostNegotiation(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	err = repositories.LostNegotiation(negID, negT)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.LostNegotiation(claims.Id, negID, negT)
 	if err != nil {
 		return err
 	}
@@ -579,7 +684,12 @@ func UpdateNegotiation(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	err = repositories.UpdateNegotiation(accTID, negT)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.UpdateNegotiation(claims.Id, accTID, negT)
 	if err != nil {
 		return err
 	}

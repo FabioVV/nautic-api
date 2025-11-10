@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
+	"nautic/cmd/audit"
 	"nautic/cmd/storage"
 	"nautic/models"
 	"net/http"
@@ -17,7 +18,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func InsertBoat(acc *models.CreateBoatRequest) error {
+func InsertBoat(id_user int, acc *models.CreateBoatRequest) error {
 	db := storage.GetDB()
 
 	query := "INSERT INTO boats (model, new_used) VALUES ($1, $2)"
@@ -27,10 +28,12 @@ func InsertBoat(acc *models.CreateBoatRequest) error {
 		return err
 	}
 
+	_ = audit.InsertLog(id_user, "/boats", "POST", fmt.Sprintf("POST request on boats"), query)
+
 	return nil
 }
 
-func GetBoatAds() ([]models.BoatAd, error) {
+func GetBoatAds(id_user int) ([]models.BoatAd, error) {
 	db := storage.GetDB()
 	var ads []models.BoatAd
 
@@ -61,10 +64,12 @@ func GetBoatAds() ([]models.BoatAd, error) {
 		return nil, fmt.Errorf("rows error: %w", err)
 	}
 
+	_ = audit.InsertLog(id_user, "/boats/:id/ads", "GET", fmt.Sprintf("GET request on boats ads"), query)
+
 	return ads, nil
 }
 
-func GetBoatEngines() ([]models.Engine, error) {
+func GetBoatEngines(id_user int) ([]models.Engine, error) {
 	db := storage.GetDB()
 	var engs []models.Engine
 
@@ -97,10 +102,12 @@ func GetBoatEngines() ([]models.Engine, error) {
 		return nil, fmt.Errorf("rows error: %w", err)
 	}
 
+	_ = audit.InsertLog(id_user, "/boats/:id/engines", "GET", fmt.Sprintf("GET request on boats engines"), query)
+
 	return engs, nil
 }
 
-func GetBoatAccessories() ([]models.Accessory, error) {
+func GetBoatAccessories(id_user int) ([]models.Accessory, error) {
 	db := storage.GetDB()
 	var accs []models.Accessory
 
@@ -133,10 +140,12 @@ func GetBoatAccessories() ([]models.Accessory, error) {
 		return nil, fmt.Errorf("rows error: %w", err)
 	}
 
+	_ = audit.InsertLog(id_user, "/boats/:id/accessories", "GET", fmt.Sprintf("GET request on boats accessories"), query)
+
 	return accs, nil
 }
 
-func GetBoats(pagenum string, limitPerPage string, model string, price string, id string, active string) ([]models.Boat, int, error) {
+func GetBoats(id_user int, pagenum string, limitPerPage string, model string, price string, id string, active string) ([]models.Boat, int, error) {
 	db := storage.GetDB()
 
 	pagenumber, err := strconv.Atoi(pagenum)
@@ -229,10 +238,12 @@ func GetBoats(pagenum string, limitPerPage string, model string, price string, i
 		return nil, 0, fmt.Errorf("rows error: %w", err)
 	}
 
+	_ = audit.InsertLog(id_user, "/boats", "GET", fmt.Sprintf("GET request on boats"), query)
+
 	return boats, numRecords, nil
 }
 
-func RemoveBoatFile(id int, id_file int) error {
+func RemoveBoatFile(id_user int, id int, id_file int) error {
 	db := storage.GetDB()
 	query := `UPDATE boat_files SET soft_deleted = 'Y' WHERE id = $1 AND id_boat = $2`
 
@@ -240,11 +251,12 @@ func RemoveBoatFile(id int, id_file int) error {
 	if err != nil {
 		return err
 	}
+	_ = audit.InsertLog(id_user, "/boats/:id/files/:id_file", "DELETE", fmt.Sprintf("DELETE request on boat file of id %d", id), query)
 
 	return nil
 }
 
-func GetBoatFiles(id int) ([]models.BoatFile, error) {
+func GetBoatFiles(id_user int, id int) ([]models.BoatFile, error) {
 	db := storage.GetDB()
 	var files []models.BoatFile
 
@@ -272,10 +284,12 @@ func GetBoatFiles(id int) ([]models.BoatFile, error) {
 		files = append(files, curFile)
 	}
 
+	_ = audit.InsertLog(id_user, "/boats/:id/files", "GET", fmt.Sprintf("GET request on boats files"), query)
+
 	return files, nil
 }
 
-func GetBoat(id int) (models.Boat, error) {
+func GetBoat(id_user int, id int) (models.Boat, error) {
 	db := storage.GetDB()
 
 	var curBoat models.Boat
@@ -302,13 +316,15 @@ func GetBoat(id int) (models.Boat, error) {
 		return curBoat, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve boat")
 	}
 
+	_ = audit.InsertLog(id_user, "/boats/:id", "GET", fmt.Sprintf("GET request on boat"), query)
+
 	return curBoat, nil
 }
 
-func RemoveBoatAccessory(id int, id_acc int) error {
+func RemoveBoatAccessory(id_user int, id int, id_acc int) error {
 	db := storage.GetDB()
 
-	_, err := GetAccessory(id_acc)
+	_, err := GetAccessory(id_acc, id_user)
 	if err != nil {
 		return err
 	}
@@ -320,10 +336,12 @@ func RemoveBoatAccessory(id int, id_acc int) error {
 		return err
 	}
 
+	_ = audit.InsertLog(id_user, "/boats/:id/accessories/:id_acc", "DELETE", fmt.Sprintf("DELETE request on boat accessory of id %d", id), query)
+
 	return nil
 }
 
-func RemoveBoatAd(id int, id_mean int) error {
+func RemoveBoatAd(id_user int, id int, id_mean int) error {
 	db := storage.GetDB()
 
 	// _, err := GetBoatAd(id_mean)
@@ -337,11 +355,12 @@ func RemoveBoatAd(id int, id_mean int) error {
 	if err != nil {
 		return err
 	}
+	_ = audit.InsertLog(id_user, "/boats/:id/ads/:id_ad", "DELETE", fmt.Sprintf("DELETE request on boat ad of id %d", id), query)
 
 	return nil
 }
 
-func RemoveBoatEngine(id int, id_eng int) error {
+func RemoveBoatEngine(id_user int, id int, id_eng int) error {
 	db := storage.GetDB()
 
 	_, err := GetEngine(id_eng)
@@ -356,10 +375,12 @@ func RemoveBoatEngine(id int, id_eng int) error {
 		return err
 	}
 
+	_ = audit.InsertLog(id_user, "/boats/:id/engines/:id_eng", "DELETE", fmt.Sprintf("DELETE request on boat engine of id %d", id), query)
+
 	return nil
 }
 
-func InsertEngineAccessory(id int, id_eng int) error {
+func InsertEngineAccessory(id_user int, id int, id_eng int) error {
 	db := storage.GetDB()
 
 	var exists bool
@@ -379,10 +400,12 @@ func InsertEngineAccessory(id int, id_eng int) error {
 		return err
 	}
 
+	_ = audit.InsertLog(id_user, "/boats/:id/engines", "POST", fmt.Sprintf("POST request on boat of id %d engine ", id), query)
+
 	return nil
 }
 
-func InsertBoatAd(id int, id_mean int, bAd *models.BoatAdCreate) error {
+func InsertBoatAd(id_user int, id int, id_mean int, bAd *models.BoatAdCreate) error {
 	db := storage.GetDB()
 
 	var exists bool
@@ -402,10 +425,12 @@ func InsertBoatAd(id int, id_mean int, bAd *models.BoatAdCreate) error {
 		return err
 	}
 
+	_ = audit.InsertLog(id_user, "/boats/:id/ads/:id_mean", "POST", fmt.Sprintf("POST request on boat of id %d ad ", id), query)
+
 	return nil
 }
 
-func InsertBoatAccessory(id int, id_acc int) error {
+func InsertBoatAccessory(id_user int, id int, id_acc int) error {
 	db := storage.GetDB()
 
 	var exists bool
@@ -425,10 +450,12 @@ func InsertBoatAccessory(id int, id_acc int) error {
 		return err
 	}
 
+	_ = audit.InsertLog(id_user, "/boats/:id/accessories/:id_acc", "POST", fmt.Sprintf("POST request on boat of id %d accessory ", id), query)
+
 	return nil
 }
 
-func UploadBoatFile(id int, file *multipart.FileHeader) error {
+func UploadBoatFile(id_user int, id int, file *multipart.FileHeader) error {
 	db := storage.GetDB()
 
 	src, err := file.Open()
@@ -463,10 +490,12 @@ func UploadBoatFile(id int, file *multipart.FileHeader) error {
 		return err
 	}
 
+	_ = audit.InsertLog(id_user, "/boats/:id/boat-file", "POST", fmt.Sprintf("POST request on boat of id %d boat-file ", id), query)
+
 	return nil
 }
 
-func UpdateBoat(id int, cT *models.BoatRequest) error {
+func UpdateBoat(id_user int, id int, cT *models.BoatRequest) error {
 	db := storage.GetDB()
 
 	query := `UPDATE boats SET `
@@ -578,6 +607,8 @@ func UpdateBoat(id int, cT *models.BoatRequest) error {
 	if err != nil {
 		return err
 	}
+
+	_ = audit.InsertLog(id_user, "/boats/:id", "UPDATE", fmt.Sprintf("UPDATE request on boat of id %d boat-file ", id), query)
 
 	return nil
 }

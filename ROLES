@@ -1,2 +1,0 @@
-When you create and user with its role, permissions are automatically granted to him based on what permissions that role has
-but this permissions are granted in the users_permissions table, meaning the admin or whatever can go into that user profile and change its permissions

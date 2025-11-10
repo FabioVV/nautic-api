@@ -3,6 +3,7 @@ package repositories
 import (
 	"database/sql"
 	"fmt"
+	"nautic/cmd/audit"
 	"nautic/cmd/storage"
 	"nautic/cmd/utils"
 	"nautic/models"
@@ -13,10 +14,10 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func UpdateAccessory(id int, accT *models.UpdateAccessoryRequest) error {
+func UpdateAccessory(id int, id_user int, accT *models.UpdateAccessoryRequest) error {
 	db := storage.GetDB()
 
-	accTg, err := GetAccessory(id)
+	accTg, err := GetAccessory(id, id_user)
 	if err != nil {
 		return err
 	}
@@ -75,13 +76,15 @@ func UpdateAccessory(id int, accT *models.UpdateAccessoryRequest) error {
 		return err
 	}
 
+	_ = audit.InsertLog(id_user, "/accessories/:id", "UPDATE", fmt.Sprintf("UPDATE request on accessory of id %d", id), query)
+
 	return nil
 }
 
-func UpdateAccessoryType(id int, accT *models.UpdateAccessoryTypeRequest) error {
+func UpdateAccessoryType(id int, id_user int, accT *models.UpdateAccessoryTypeRequest) error {
 	db := storage.GetDB()
 
-	accTg, err := GetAccessoryType(id)
+	accTg, err := GetAccessoryType(id, id_user)
 	if err != nil {
 		return err
 	}
@@ -117,13 +120,15 @@ func UpdateAccessoryType(id int, accT *models.UpdateAccessoryTypeRequest) error 
 		return err
 	}
 
+	_ = audit.InsertLog(id_user, "/accessories/types/:id", "UPDATE", fmt.Sprintf("UPDATE request on accessory type of id %d", id), query)
+
 	return nil
 }
 
-func DeactivateAccessoryType(id int) error {
+func DeactivateAccessoryType(id int, id_user int) error {
 	db := storage.GetDB()
 
-	_, err := GetAccessoryType(id)
+	_, err := GetAccessoryType(id, id_user)
 	if err != nil {
 		return err
 	}
@@ -135,14 +140,15 @@ func DeactivateAccessoryType(id int) error {
 		return err
 	}
 
-	return nil
+	_ = audit.InsertLog(id_user, "/accessories/types/:id", "DELETE", fmt.Sprintf("DELETE request on accessory type of id %d", id), query)
 
+	return nil
 }
 
-func DeactivateAccessory(id int) error {
+func DeactivateAccessory(id int, id_user int) error {
 	db := storage.GetDB()
 
-	_, err := GetAccessory(id)
+	_, err := GetAccessory(id, id_user)
 	if err != nil {
 		return err
 	}
@@ -154,10 +160,12 @@ func DeactivateAccessory(id int) error {
 		return err
 	}
 
+	_ = audit.InsertLog(id_user, "/accessories/:id", "DELETE", fmt.Sprintf("DELETE request on accessory of id %d", id), query)
+
 	return nil
 }
 
-func GetAccessoryType(id int) (models.AccessoryType, error) {
+func GetAccessoryType(id int, id_user int) (models.AccessoryType, error) {
 	db := storage.GetDB()
 
 	var accT models.AccessoryType
@@ -170,10 +178,12 @@ func GetAccessoryType(id int) (models.AccessoryType, error) {
 		return accT, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve accessory type")
 	}
 
+	_ = audit.InsertLog(id_user, "/accessories/types/:id", "GET", fmt.Sprintf("GET request on accessory type of id %d", id), query)
+
 	return accT, nil
 }
 
-func GetAccessory(id int) (models.Accessory, error) {
+func GetAccessory(id int, id_user int) (models.Accessory, error) {
 	db := storage.GetDB()
 
 	var acc models.Accessory
@@ -190,10 +200,12 @@ func GetAccessory(id int) (models.Accessory, error) {
 		return acc, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve accessory"+err.Error())
 	}
 
+	_ = audit.InsertLog(id_user, "/accessories/:id", "GET", fmt.Sprintf("GET request on accessory of id %d", id), query)
+
 	return acc, nil
 }
 
-func InsertAccessoryType(accT *models.CreateAccessoryTypeRequest) error {
+func InsertAccessoryType(id_user int, accT *models.CreateAccessoryTypeRequest) error {
 	db := storage.GetDB()
 
 	query := "INSERT INTO accessory_types (type) VALUES ($1)"
@@ -206,10 +218,12 @@ func InsertAccessoryType(accT *models.CreateAccessoryTypeRequest) error {
 		return err
 	}
 
+	_ = audit.InsertLog(id_user, "/accessories/types/:id", "POST", fmt.Sprintf("POST request on accessory type"), query)
+
 	return nil
 }
 
-func InsertAccessory(acc *models.CreateAccessoryRequest) error {
+func InsertAccessory(id_user int, acc *models.CreateAccessoryRequest) error {
 	db := storage.GetDB()
 
 	query := "INSERT INTO accessories (model, details, price_buy, price_sell, id_accessory_type) VALUES ($1, $2, $3, $4, $5)"
@@ -222,10 +236,12 @@ func InsertAccessory(acc *models.CreateAccessoryRequest) error {
 		return err
 	}
 
+	_ = audit.InsertLog(id_user, "/accessories/:id", "POST", fmt.Sprintf("POST request on accessory"), query)
+
 	return nil
 }
 
-func GetAccessoriesTypes(pagenum string, limitPerPage string, _type string, active string) ([]models.AccessoryType, int, error) {
+func GetAccessoriesTypes(id_user int, pagenum string, limitPerPage string, _type string, active string) ([]models.AccessoryType, int, error) {
 	db := storage.GetDB()
 
 	pagenumber, err := strconv.Atoi(pagenum)
@@ -305,10 +321,12 @@ func GetAccessoriesTypes(pagenum string, limitPerPage string, _type string, acti
 		return nil, 0, fmt.Errorf("rows error: %w", err)
 	}
 
+	_ = audit.InsertLog(id_user, "/accessories/types", "GET", fmt.Sprintf("GET request on accessory types"), query)
+
 	return accs, numRecords, nil
 }
 
-func GetAccessories(pagenum string, limitPerPage string, model string, active string) ([]models.Accessory, int, error) {
+func GetAccessories(id_user int, pagenum string, limitPerPage string, model string, active string) ([]models.Accessory, int, error) {
 	db := storage.GetDB()
 
 	pagenumber, err := strconv.Atoi(pagenum)
@@ -387,6 +405,8 @@ func GetAccessories(pagenum string, limitPerPage string, model string, active st
 	if err := rows.Err(); err != nil {
 		return nil, 0, fmt.Errorf("rows error: %w", err)
 	}
+
+	_ = audit.InsertLog(id_user, "/accessories", "GET", fmt.Sprintf("GET request on accessories"), query)
 
 	return accs, numRecords, nil
 }

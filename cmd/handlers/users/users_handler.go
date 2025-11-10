@@ -2,6 +2,7 @@ package users
 
 import (
 	"nautic/cmd/repositories"
+	"nautic/cmd/utils"
 
 	"nautic/models"
 	"nautic/validation"
@@ -23,7 +24,12 @@ func InsertUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
 	}
 
-	if err := repositories.InsertUser(user); err != nil {
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	if err := repositories.InsertUser(user, claims.Id); err != nil {
 		return err
 	}
 
@@ -40,7 +46,12 @@ func GetUserPermissions(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	roles, err := repositories.GetUserPermissions__(rID)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	roles, err := repositories.GetUserPermissions__(rID, claims.Id)
 	if err != nil {
 		return err
 	}
@@ -78,7 +89,7 @@ func InsertUserPermission(c echo.Context) error {
 	idParam := c.Param("id")
 	idParamPerm := c.Param("id_perm")
 
-	roleId, err := strconv.Atoi(idParam)
+	userId, err := strconv.Atoi(idParam)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
@@ -88,7 +99,7 @@ func InsertUserPermission(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	err = repositories.InsertUserPermission(roleId, permId)
+	err = repositories.InsertUserPermission(userId, permId)
 	if err != nil {
 		return err
 	}
@@ -106,7 +117,12 @@ func GetUser(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID format")
 	}
 
-	user, err := repositories.GetUser(userID)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	user, err := repositories.GetUser(userID, claims.Id)
 	if err != nil {
 		return err
 	}
@@ -122,7 +138,12 @@ func GetUsers(c echo.Context) error {
 	qemail := c.QueryParams().Get("email")
 	qactive := c.QueryParams().Get("active")
 
-	users, numRecords, err := repositories.GetUsers(qpage, qperpage, qname, qemail, qactive)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	users, numRecords, err := repositories.GetUsers(claims.Id, qpage, qperpage, qname, qemail, qactive)
 	if err != nil {
 		return err
 	}
@@ -151,7 +172,12 @@ func UpdateUser(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID format")
 	}
 
-	err = repositories.UpdateUser(userID, user)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.UpdateUser(userID, claims.Id, user)
 	if err != nil {
 		return err
 	}
@@ -169,7 +195,12 @@ func DeactivateUser(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID format")
 	}
 
-	err = repositories.DeactivateUser(userID)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.DeactivateUser(userID, claims.Id)
 	if err != nil {
 		return err
 	}

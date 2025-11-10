@@ -3,6 +3,7 @@ package repositories
 import (
 	"database/sql"
 	"fmt"
+	"nautic/cmd/audit"
 	"nautic/cmd/storage"
 	"nautic/models"
 	"net/http"
@@ -12,7 +13,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func InsertRole(role *models.CreateRole) error {
+func InsertRole(role *models.CreateRole, id_user int) error {
 	db := storage.GetDB()
 
 	query := "SELECT id FROM roles WHERE name = $1"
@@ -31,10 +32,12 @@ func InsertRole(role *models.CreateRole) error {
 		}
 	}
 
+	_ = audit.InsertLog(id_user, "/roles", "POST", fmt.Sprintf("POST request on roles"), query)
+
 	return nil
 }
 
-func GetRolePermissionsByName(name string) ([]models.RolePermission, error) {
+func GetRolePermissionsByName(name string, id_user int) ([]models.RolePermission, error) {
 	db := storage.GetDB()
 
 	var perms []models.RolePermission
@@ -75,6 +78,8 @@ func GetRolePermissionsByName(name string) ([]models.RolePermission, error) {
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("rows error: %w", err)
 	}
+
+	_ = audit.InsertLog(id_user, "/roles", "GET", fmt.Sprintf("GET request on roles permissions"), query)
 
 	return perms, nil
 }
@@ -122,7 +127,7 @@ func GetRolePermissions(id int) ([]models.RolePermission, error) {
 	return perms, nil
 }
 
-func GetRoles(pagenum string, limitPerPage string, name string, showAdmin string) ([]models.Role, int, error) {
+func GetRoles(pagenum string, limitPerPage string, name string, showAdmin string, id_user int) ([]models.Role, int, error) {
 	db := storage.GetDB()
 
 	pagenumber, err := strconv.Atoi(pagenum)
@@ -201,10 +206,12 @@ func GetRoles(pagenum string, limitPerPage string, name string, showAdmin string
 		return nil, 0, fmt.Errorf("rows error: %w", err)
 	}
 
+	_ = audit.InsertLog(id_user, "/roles", "GET", fmt.Sprintf("GET request on roles"), query)
+
 	return roles, numRecords, nil
 }
 
-func GetRoleByName(name string) (models.Role, error) {
+func GetRoleByName(name string, id_user int) (models.Role, error) {
 	db := storage.GetDB()
 
 	var role models.Role
@@ -217,10 +224,12 @@ func GetRoleByName(name string) (models.Role, error) {
 		return role, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve role")
 	}
 
+	_ = audit.InsertLog(id_user, "/roles", "GET", fmt.Sprintf("GET request on role of id %d", role.Id), query)
+
 	return role, nil
 }
 
-func GetRole(id int) (models.Role, error) {
+func GetRole(id int, id_user int) (models.Role, error) {
 	db := storage.GetDB()
 
 	var role models.Role
@@ -232,14 +241,15 @@ func GetRole(id int) (models.Role, error) {
 		}
 		return role, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve role"+err.Error())
 	}
+	_ = audit.InsertLog(id_user, "/roles", "GET", fmt.Sprintf("GET request on role of id %d", role.Id), query)
 
 	return role, nil
 }
 
-func RemoveRolePermission(idRole int, idPerm int) error {
+func RemoveRolePermission(idRole int, idPerm int, id_user int) error {
 	db := storage.GetDB()
 
-	_, err := GetRole(idRole)
+	_, err := GetRole(idRole, id_user)
 	if err != nil {
 		return err
 	}
@@ -250,14 +260,15 @@ func RemoveRolePermission(idRole int, idPerm int) error {
 	if err != nil {
 		return err
 	}
+	_ = audit.InsertLog(id_user, "/roles/:id/permissions/:id_perm", "DELETE", fmt.Sprintf("DELETE request on role permission of id %d", idRole), query)
 
 	return nil
 }
 
-func DeleteRole(id int) error {
+func DeleteRole(id int, id_user int) error {
 	db := storage.GetDB()
 
-	_, err := GetRole(id)
+	_, err := GetRole(id, id_user)
 	if err != nil {
 		return err
 	}
@@ -269,13 +280,15 @@ func DeleteRole(id int) error {
 		return err
 	}
 
+	_ = audit.InsertLog(id_user, "/roles/:id", "DELETE", fmt.Sprintf("DELETE request on role of id %d", id), query)
+
 	return nil
 }
 
-func InsertRolePermission(idRole int, idPerm int) error {
+func InsertRolePermission(idRole int, idPerm int, id_user int) error {
 	db := storage.GetDB()
 
-	_, err := GetRole(idRole)
+	_, err := GetRole(idRole, id_user)
 	if err != nil {
 		return err
 	}
@@ -287,13 +300,15 @@ func InsertRolePermission(idRole int, idPerm int) error {
 		return err
 	}
 
+	_ = audit.InsertLog(id_user, "/roles/:id/permissions/:id_perm", "INSERT", fmt.Sprintf("INSERT request on role permission of id %d", idRole), query)
+
 	return nil
 }
 
-func UpdateRole(id int, rM *models.CreateRole) error {
+func UpdateRole(id int, id_user int, rM *models.CreateRole) error {
 	db := storage.GetDB()
 
-	_, err := GetRole(id)
+	_, err := GetRole(id, id_user)
 	if err != nil {
 		return err
 	}
@@ -323,6 +338,8 @@ func UpdateRole(id int, rM *models.CreateRole) error {
 	if err != nil {
 		return err
 	}
+
+	_ = audit.InsertLog(id_user, "/roles/:id", "UPDATE", fmt.Sprintf("UPDATE request on role of id %d", id), query)
 
 	return nil
 }

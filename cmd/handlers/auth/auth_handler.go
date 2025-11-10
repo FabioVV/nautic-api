@@ -61,12 +61,12 @@ func Login(c echo.Context) error {
 		return err
 	}
 
-	userRoles, err := repositories.GetUserRoles(id)
+	userRoles, err := repositories.GetUserRoles(id, 0)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve user roles during auth: "+err.Error())
 	}
 
-	userPermissions, err := repositories.GetUserPermissions(id)
+	userPermissions, err := repositories.GetUserPermissions(id, 0)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve user permissions during auth: "+err.Error())
 	}

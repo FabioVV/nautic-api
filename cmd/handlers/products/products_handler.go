@@ -2,6 +2,7 @@ package products
 
 import (
 	"nautic/cmd/repositories"
+	"nautic/cmd/utils"
 	"nautic/models"
 	"nautic/validation"
 	"strconv"
@@ -57,7 +58,12 @@ func UpdateAccessory(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	err = repositories.UpdateAccessory(accTID, accT)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.UpdateAccessory(accTID, claims.Id, accT)
 	if err != nil {
 		return err
 	}
@@ -85,7 +91,12 @@ func UpdateAccessoryType(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID format")
 	}
 
-	err = repositories.UpdateAccessoryType(accTID, accT)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.UpdateAccessoryType(accTID, claims.Id, accT)
 	if err != nil {
 		return err
 	}
@@ -103,7 +114,12 @@ func DeactivateAccessoryType(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	err = repositories.DeactivateAccessoryType(accTID)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.DeactivateAccessoryType(accTID, claims.Id)
 	if err != nil {
 		return err
 	}
@@ -124,7 +140,12 @@ func InsertAccessoryType(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
 	}
 
-	if err := repositories.InsertAccessoryType(accT); err != nil {
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	if err := repositories.InsertAccessoryType(claims.Id, accT); err != nil {
 		return err
 	}
 
@@ -141,7 +162,12 @@ func DeactivateAccessory(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	err = repositories.DeactivateAccessory(accID)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.DeactivateAccessory(accID, claims.Id)
 	if err != nil {
 		return err
 	}
@@ -183,7 +209,12 @@ func InsertBoatEngine(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	err = repositories.InsertEngineAccessory(boatID, engID)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.InsertEngineAccessory(claims.Id, boatID, engID)
 	if err != nil {
 		return err
 	}
@@ -207,7 +238,12 @@ func RemoveBoatAd(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	err = repositories.RemoveBoatAd(id, id_mean)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.RemoveBoatAd(claims.Id, id, id_mean)
 	if err != nil {
 		return err
 	}
@@ -231,7 +267,12 @@ func RemoveBoatEngine(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	err = repositories.RemoveBoatEngine(id, id_eng)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.RemoveBoatEngine(claims.Id, id, id_eng)
 	if err != nil {
 		return err
 	}
@@ -255,7 +296,12 @@ func RemoveBoatAccessory(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	err = repositories.RemoveBoatAccessory(id, id_acc)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.RemoveBoatAccessory(claims.Id, id, id_acc)
 	if err != nil {
 		return err
 	}
@@ -288,7 +334,12 @@ func InsertBoatAd(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
 	}
 
-	err = repositories.InsertBoatAd(boatID, meanID, bAd)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.InsertBoatAd(claims.Id, boatID, meanID, bAd)
 	if err != nil {
 		return err
 	}
@@ -312,7 +363,12 @@ func InsertBoatAccessory(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	err = repositories.InsertBoatAccessory(boatID, accID)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.InsertBoatAccessory(claims.Id, boatID, accID)
 	if err != nil {
 		return err
 	}
@@ -336,7 +392,12 @@ func RemoveBoatFile(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	err = repositories.RemoveBoatFile(id, id_file)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.RemoveBoatFile(claims.Id, id, id_file)
 	if err != nil {
 		return err
 	}
@@ -354,7 +415,12 @@ func GetBoatFiles(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	files, err := repositories.GetBoatFiles(bID)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	files, err := repositories.GetBoatFiles(claims.Id, bID)
 	if err != nil {
 		return err
 	}
@@ -372,7 +438,12 @@ func GetBoat(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	acc, err := repositories.GetBoat(bID)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	acc, err := repositories.GetBoat(claims.Id, bID)
 	if err != nil {
 		return err
 	}
@@ -395,7 +466,13 @@ func UploadBoatFile(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "file is required")
 	}
-	err = repositories.UploadBoatFile(boatID, fileHeader)
+
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.UploadBoatFile(claims.Id, boatID, fileHeader)
 	if err != nil {
 		return err
 	}
@@ -423,7 +500,12 @@ func UpdateBoat(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	err = repositories.UpdateBoat(accTID, cT)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.UpdateBoat(claims.Id, accTID, cT)
 	if err != nil {
 		return err
 	}
@@ -444,7 +526,12 @@ func InsertBoat(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
 	}
 
-	if err := repositories.InsertBoat(boat); err != nil {
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	if err := repositories.InsertBoat(claims.Id, boat); err != nil {
 		return err
 	}
 
@@ -484,7 +571,12 @@ func InsertAccessory(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
 	}
 
-	if err := repositories.InsertAccessory(accT); err != nil {
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	if err := repositories.InsertAccessory(claims.Id, accT); err != nil {
 		return err
 	}
 
@@ -494,7 +586,12 @@ func InsertAccessory(c echo.Context) error {
 }
 
 func GetBoatAds(c echo.Context) error {
-	ads, err := repositories.GetBoatAds()
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	ads, err := repositories.GetBoatAds(claims.Id)
 	if err != nil {
 		return err
 	}
@@ -505,7 +602,12 @@ func GetBoatAds(c echo.Context) error {
 }
 
 func GetBoatEngines(c echo.Context) error {
-	boats, err := repositories.GetBoatEngines()
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	boats, err := repositories.GetBoatEngines(claims.Id)
 	if err != nil {
 		return err
 	}
@@ -516,7 +618,12 @@ func GetBoatEngines(c echo.Context) error {
 }
 
 func GetBoatAccessories(c echo.Context) error {
-	boats, err := repositories.GetBoatAccessories()
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	boats, err := repositories.GetBoatAccessories(claims.Id)
 	if err != nil {
 		return err
 	}
@@ -534,7 +641,12 @@ func GetBoats(c echo.Context) error {
 	qprice := c.QueryParams().Get("price")
 	qid := c.QueryParams().Get("id")
 
-	boats, numRecords, err := repositories.GetBoats(qpage, qperpage, qmodel, qprice, qid, qactive)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	boats, numRecords, err := repositories.GetBoats(claims.Id, qpage, qperpage, qmodel, qprice, qid, qactive)
 	if err != nil {
 		return err
 	}
@@ -568,7 +680,12 @@ func GetAccessories(c echo.Context) error {
 	qmodel := c.QueryParams().Get("name")
 	qactive := c.QueryParams().Get("active")
 
-	accs, numRecords, err := repositories.GetAccessories(qpage, qperpage, qmodel, qactive)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	accs, numRecords, err := repositories.GetAccessories(claims.Id, qpage, qperpage, qmodel, qactive)
 	if err != nil {
 		return err
 	}
@@ -587,7 +704,12 @@ func GetAccessory(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	acc, err := repositories.GetAccessory(accID)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	acc, err := repositories.GetAccessory(accID, claims.Id)
 	if err != nil {
 		return err
 	}
@@ -622,7 +744,12 @@ func GetAccessoriesTypes(c echo.Context) error {
 	qtype := c.QueryParams().Get("type")
 	qactive := c.QueryParams().Get("active")
 
-	accsT, numRecords, err := repositories.GetAccessoriesTypes(qpage, qperpage, qtype, qactive)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	accsT, numRecords, err := repositories.GetAccessoriesTypes(claims.Id, qpage, qperpage, qtype, qactive)
 	if err != nil {
 		return err
 	}

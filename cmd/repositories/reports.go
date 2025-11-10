@@ -3,6 +3,7 @@ package repositories
 import (
 	"database/sql"
 	"fmt"
+	"nautic/cmd/audit"
 	"nautic/cmd/storage"
 	"nautic/models"
 	"net/http"
@@ -12,7 +13,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func GetNegotiationsReport(pagenum string, limitPerPage string, name string, boat string, dateIni string, dateEnd string) ([]models.NegotiationReport, int, error) {
+func GetNegotiationsReport(id_user int, pagenum string, limitPerPage string, name string, boat string, dateIni string, dateEnd string) ([]models.NegotiationReport, int, error) {
 	db := storage.GetDB()
 
 	var negs []models.NegotiationReport
@@ -156,10 +157,12 @@ func GetNegotiationsReport(pagenum string, limitPerPage string, name string, boa
 		return nil, 0, fmt.Errorf("rows error: %w", err)
 	}
 
+	_ = audit.InsertLog(id_user, "/reports/negotiations", "GET", fmt.Sprintf("GET request on negotiations report"), query)
+
 	return negs, numRecords, nil
 }
 
-func GetSalesOrdersReport(pagenum string, limitPerPage string, name string, seller string, dateIni string, dateEnd string) ([]models.SalesOrdersReport, int, error) {
+func GetSalesOrdersReport(id_user int, pagenum string, limitPerPage string, name string, seller string, dateIni string, dateEnd string) ([]models.SalesOrdersReport, int, error) {
 	db := storage.GetDB()
 
 	var negs []models.SalesOrdersReport
@@ -270,10 +273,12 @@ func GetSalesOrdersReport(pagenum string, limitPerPage string, name string, sell
 		return nil, 0, fmt.Errorf("rows error: %w", err)
 	}
 
+	_ = audit.InsertLog(id_user, "/reports/sales-orders", "GET", fmt.Sprintf("GET request on sales orders report"), query)
+
 	return negs, numRecords, nil
 }
 
-func GetLostNegotiationsReport(pagenum string, limitPerPage string, name string, boat string, dateIni string, dateEnd string) ([]models.LostNegotiationReport, int, error) {
+func GetLostNegotiationsReport(id_user int, pagenum string, limitPerPage string, name string, boat string, dateIni string, dateEnd string) ([]models.LostNegotiationReport, int, error) {
 	db := storage.GetDB()
 	var negs []models.LostNegotiationReport
 
@@ -378,6 +383,8 @@ func GetLostNegotiationsReport(pagenum string, limitPerPage string, name string,
 	if err := rows.Err(); err != nil {
 		return nil, 0, fmt.Errorf("rows error: %w", err)
 	}
+
+	_ = audit.InsertLog(id_user, "/reports/lost-negotiations", "GET", fmt.Sprintf("GET request on lost negotiations report"), query)
 
 	return negs, numRecords, nil
 }

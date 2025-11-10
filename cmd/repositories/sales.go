@@ -3,6 +3,7 @@ package repositories
 import (
 	"database/sql"
 	"fmt"
+	"nautic/cmd/audit"
 	"nautic/cmd/storage"
 	"nautic/cmd/utils"
 	"nautic/models"
@@ -13,10 +14,10 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func UpdateComMean(id int, mcR *models.UpdateCommunicationMeanRequest) error {
+func UpdateComMean(id int, id_user int, mcR *models.UpdateCommunicationMeanRequest) error {
 	db := storage.GetDB()
 
-	mc, err := GetComMean(id)
+	mc, err := GetComMean(id, id_user)
 	if err != nil {
 		return err
 	}
@@ -52,13 +53,16 @@ func UpdateComMean(id int, mcR *models.UpdateCommunicationMeanRequest) error {
 		return err
 	}
 
+	// Don't check log insert error for now
+	_ = audit.InsertLog(id_user, "/sales/communication-means/:id", "UPDATE", fmt.Sprintf("UPDATE request on communication mean of id %d", id), query)
+
 	return nil
 }
 
-func DeactivateComMean(id int) error {
+func DeactivateComMean(id int, id_user int) error {
 	db := storage.GetDB()
 
-	_, err := GetComMean(id)
+	_, err := GetComMean(id, id_user)
 	if err != nil {
 		return err
 	}
@@ -70,11 +74,14 @@ func DeactivateComMean(id int) error {
 		return err
 	}
 
+	// Don't check log insert error for now
+	_ = audit.InsertLog(id_user, "/sales/communication-means/:id", "DELETE", fmt.Sprintf("DELETE request on communication mean of id %d", id), query)
+
 	return nil
 
 }
 
-func GetComMean(id int) (models.CommunicationMean, error) {
+func GetComMean(id int, id_user int) (models.CommunicationMean, error) {
 	db := storage.GetDB()
 
 	var mc models.CommunicationMean
@@ -87,10 +94,13 @@ func GetComMean(id int) (models.CommunicationMean, error) {
 		return mc, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve Mean")
 	}
 
+	// Don't check log insert error for now
+	_ = audit.InsertLog(id_user, "/sales/communication-means/:id", "GET", fmt.Sprintf("GET request on communication mean of id %d", id), query)
+
 	return mc, nil
 }
 
-func InsertSalesOrderUsingBusinessHistory(idBusinessHistory int) error {
+func InsertSalesOrderUsingBusinessHistory(idBusinessHistory int, id_user int) error {
 	db := storage.GetDB()
 
 	query := "INSERT INTO sales_orders (id_business_history) VALUES ($1) RETURNING id"
@@ -108,10 +118,13 @@ func InsertSalesOrderUsingBusinessHistory(idBusinessHistory int) error {
 		return err
 	}
 
+	// Don't check log insert error for now
+	_ = audit.InsertLog(id_user, "/orders/communication-means/:id", "GET", fmt.Sprintf("GET request on communication mean of id %d", idBusinessHistory), query)
+
 	return nil
 }
 
-func InsertComMeans(mcR *models.CreateCommunicationMeanRequest) error {
+func InsertComMeans(id_user int, mcR *models.CreateCommunicationMeanRequest) error {
 	db := storage.GetDB()
 
 	query := "INSERT INTO mean_communication (name) VALUES ($1)"
@@ -124,10 +137,13 @@ func InsertComMeans(mcR *models.CreateCommunicationMeanRequest) error {
 		return err
 	}
 
+	// Don't check log insert error for now
+	_ = audit.InsertLog(id_user, "/sales/communication-means", "POST", fmt.Sprintf("POST request on communication mean"), query)
+
 	return nil
 }
 
-func InsertNegotiation(neg *models.CreateNegotiationRequest) error {
+func InsertNegotiation(id_user int, neg *models.CreateNegotiationRequest) error {
 	db := storage.GetDB()
 
 	query := "INSERT INTO customers (id_user, id_mean_communication, name, email, phone, qualified, qualified_type, boat_alert) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id"
@@ -147,6 +163,9 @@ func InsertNegotiation(neg *models.CreateNegotiationRequest) error {
 	if err != nil {
 		return err
 	}
+
+	// Don't check log insert error for now
+	_ = audit.InsertLog(id_user, "/sales/negotiations", "POST", fmt.Sprintf("POST request on negotiations"), query)
 
 	return nil
 }
@@ -178,10 +197,13 @@ func CreateNegotiationHistory(id int, neg *models.CreateNegotiationHistoryReques
 		return err
 	}
 
+	// Don't check log insert error for now
+	_ = audit.InsertLog(id, "/sales/negotiation/:id/history", "POST", fmt.Sprintf("POST request on negotiations histories"), query)
+
 	return nil
 }
 
-func GetCustomersBirthday() ([]models.Customer, int, error) {
+func GetCustomersBirthday(id_user int) ([]models.Customer, int, error) {
 	db := storage.GetDB()
 	var custs []models.Customer
 
@@ -252,10 +274,13 @@ func GetCustomersBirthday() ([]models.Customer, int, error) {
 		return nil, 0, fmt.Errorf("rows error: %w", err)
 	}
 
+	// Don't check log insert error for now
+	_ = audit.InsertLog(id_user, "/customers/birthdays", "GET", fmt.Sprintf("GET request on customer birthdays"), query)
+
 	return custs, numRecords, nil
 }
 
-func GetCustomers(pagenum string, limitPerPage string, name string, email string, phone string, boat string) ([]models.Customer, int, error) {
+func GetCustomers(id_user int, pagenum string, limitPerPage string, name string, email string, phone string, boat string) ([]models.Customer, int, error) {
 	db := storage.GetDB()
 
 	pagenumber, err := strconv.Atoi(pagenum)
@@ -354,10 +379,13 @@ func GetCustomers(pagenum string, limitPerPage string, name string, email string
 		return nil, 0, fmt.Errorf("rows error: %w", err)
 	}
 
+	// Don't check log insert error for now
+	_ = audit.InsertLog(id_user, "/customers", "GET", fmt.Sprintf("GET request on customers"), query)
+
 	return custs, numRecords, nil
 }
 
-func GetComMeans(pagenum string, limitPerPage string, name string, active string) ([]models.CommunicationMean, int, error) {
+func GetComMeans(id_user int, pagenum string, limitPerPage string, name string, active string) ([]models.CommunicationMean, int, error) {
 	db := storage.GetDB()
 
 	pagenumber, err := strconv.Atoi(pagenum)
@@ -436,6 +464,9 @@ func GetComMeans(pagenum string, limitPerPage string, name string, active string
 	if err := rows.Err(); err != nil {
 		return nil, 0, fmt.Errorf("rows error: %w", err)
 	}
+
+	// Don't check log insert error for now
+	_ = audit.InsertLog(id_user, "/sales/communication-means", "GET", fmt.Sprintf("GET request on communication means"), query)
 
 	return accs, numRecords, nil
 }
@@ -523,6 +554,9 @@ func GetNegotiationHistory(id_business int, id_user int) ([]models.NegotiationHi
 		return nil, 0, fmt.Errorf("rows error: %w", err)
 	}
 
+	// Don't check log insert error for now
+	_ = audit.InsertLog(id_user, "/negotiations/:id/history", "GET", fmt.Sprintf("GET request on negotiation history of business %d", id_business), query)
+
 	return negsh, numRecords, nil
 }
 
@@ -594,6 +628,9 @@ func GetNegotiationsAlerts(userId int) ([]models.NegotiationAlert, error) {
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("rows error: %w", err)
 	}
+
+	// Don't check log insert error for now
+	_ = audit.InsertLog(userId, "/negotiations/alerts", "GET", fmt.Sprintf("GET request on negotiation alerts"), query)
 
 	return negs, nil
 }
@@ -738,10 +775,13 @@ func GetNegotiations(search string, userId int) ([]models.Negotiation, int, erro
 		return nil, 0, fmt.Errorf("rows error: %w", err)
 	}
 
+	// Don't check log insert error for now
+	_ = audit.InsertLog(userId, "/negotiations", "GET", fmt.Sprintf("GET request on negotiations"), query)
+
 	return negs, numRecords, nil
 }
 
-func GetCustomerNegotiationsHistories(customerId int) ([]models.NegotiationHistory, int, error) {
+func GetCustomerNegotiationsHistories(id_user int, customerId int) ([]models.NegotiationHistory, int, error) {
 	db := storage.GetDB()
 
 	var negsh []models.NegotiationHistory
@@ -822,10 +862,13 @@ func GetCustomerNegotiationsHistories(customerId int) ([]models.NegotiationHisto
 		return nil, 0, fmt.Errorf("rows error: %w", err)
 	}
 
+	// Don't check log insert error for now
+	_ = audit.InsertLog(id_user, "/customers/:id/negotiations/history", "GET", fmt.Sprintf("GET request on negotiations history of customer of id %d", customerId), query)
+
 	return negsh, numRecords, nil
 }
 
-func GetCustomer(id int) (models.Customer, error) {
+func GetCustomer(id int, id_user int) (models.Customer, error) {
 	db := storage.GetDB()
 
 	var curC models.Customer
@@ -864,10 +907,12 @@ func GetCustomer(id int) (models.Customer, error) {
 		return curC, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve negotiation")
 	}
 
+	// Don't check log insert error for now
+	_ = audit.InsertLog(id_user, "/customers", "GET", fmt.Sprintf("GET request on customer of id %d", id), query)
 	return curC, nil
 }
 
-func GetNegotiation(id int) (models.Negotiation, error) {
+func GetNegotiation(id_user int, id int) (models.Negotiation, error) {
 	db := storage.GetDB()
 
 	var curNeg models.Negotiation
@@ -912,10 +957,13 @@ func GetNegotiation(id int) (models.Negotiation, error) {
 		return curNeg, echo.NewHTTPError(http.StatusInternalServerError, "Could not retrieve negotiation"+err.Error())
 	}
 
+	// Don't check log insert error for now
+	_ = audit.InsertLog(id_user, "/negotiations", "GET", fmt.Sprintf("GET request on negotiation of id %d", id), query)
+
 	return curNeg, nil
 }
 
-func UpdateCustomer(id int, cT *models.CustomerRequest) error {
+func UpdateCustomer(id_user int, id int, cT *models.CustomerRequest) error {
 	db := storage.GetDB()
 
 	// _, err := GetNegotiation(id)
@@ -1043,10 +1091,13 @@ func UpdateCustomer(id int, cT *models.CustomerRequest) error {
 		return err
 	}
 
+	// Don't check log insert error for now
+	_ = audit.InsertLog(id_user, "/customers/:id", "UPDATE", fmt.Sprintf("UPDATE request on customer of id %d", id), query)
+
 	return nil
 }
 
-func ReactivateNegotiation(id int) error {
+func ReactivateNegotiation(id_user int, id int) error {
 	db := storage.GetDB()
 	query := `UPDATE so_business SET negotiation_active = 'Y', updated_at = NOW(), stage = 1 WHERE id = $1`
 
@@ -1055,10 +1106,13 @@ func ReactivateNegotiation(id int) error {
 		return err
 	}
 
+	// Don't check log insert error for now
+	_ = audit.InsertLog(id_user, "/sales/negotiations/:id/reactivate", "UPDATE", fmt.Sprintf("UPDATE request on negotiation of id %d", id), query)
+
 	return nil
 }
 
-func LostNegotiation(id int, negT *models.LostNegotiation) error {
+func LostNegotiation(id_user int, id int, negT *models.LostNegotiation) error {
 	db := storage.GetDB()
 	query := `UPDATE so_business SET negotiation_active = $1, updated_at = NOW() WHERE id = $2`
 
@@ -1079,10 +1133,13 @@ func LostNegotiation(id int, negT *models.LostNegotiation) error {
 		return err
 	}
 
+	// Don't check log insert error for now
+	_ = audit.InsertLog(id_user, "/sales/negotiations/:id/deactivate", "UPDATE", fmt.Sprintf("UPDATE request on negotiation of id %d", id), query)
+
 	return nil
 }
 
-func UpdateNegotiation(id int, negT *models.CreateNegotiationRequest) error {
+func UpdateNegotiation(id_user int, id int, negT *models.CreateNegotiationRequest) error {
 	db := storage.GetDB()
 
 	// _, err := GetNegotiation(id)
@@ -1198,10 +1255,13 @@ func UpdateNegotiation(id int, negT *models.CreateNegotiationRequest) error {
 		return err
 	}
 
+	// Don't check log insert error for now
+	_ = audit.InsertLog(id_user, "/sales/negotiations/:id", "UPDATE", fmt.Sprintf("UPDATE request on negotiation of id %d", id), query)
+
 	return nil
 }
 
-func UpgradeQuoteToSalesOrder(id int) error {
+func UpgradeQuoteToSalesOrder(id_user int, id int) error {
 	db := storage.GetDB()
 
 	salesOr, err := GetSalesOrder(id)
@@ -1225,13 +1285,16 @@ func UpgradeQuoteToSalesOrder(id int) error {
 			return err
 		}
 
+		// Don't check log insert error for now
+		_ = audit.InsertLog(id_user, "/sales/orders/:id/upgrade-quote", "UPDATE", fmt.Sprintf("UPDATE request on quote of id %d", id), query)
+
 		return nil
 	}
 
 	return echo.NewHTTPError(http.StatusBadRequest, "Sales order cannot be upgraded to order")
 }
 
-func CancelSalesOrder(id int) error {
+func CancelSalesOrder(id_user int, id int) error {
 	db := storage.GetDB()
 
 	var status string = ""
@@ -1257,10 +1320,13 @@ func CancelSalesOrder(id int) error {
 		}
 	}
 
+	// Don't check log insert error for now
+	_ = audit.InsertLog(id_user, "/orders/:id", "DELETE", fmt.Sprintf("DELETE request on sales order of id %d", id), query)
+
 	return nil
 }
 
-func UpdateEngineSalesOrder(id int, id_engine int) error {
+func UpdateEngineSalesOrder(id_user int, id int, id_engine int) error {
 	db := storage.GetDB()
 
 	engine, err := GetEngine(id_engine)
@@ -1297,13 +1363,16 @@ func UpdateEngineSalesOrder(id int, id_engine int) error {
 		}
 	}
 
+	// Don't check log insert error for now
+	_ = audit.InsertLog(id_user, "/orders/:id/engine/:id_engine", "UPDATE", fmt.Sprintf("UPDATE request on sales order of id %d", id), query)
+
 	return nil
 }
 
-func UpdateBoatSalesOrder(id int, id_boat int) error {
+func UpdateBoatSalesOrder(id_user int, id int, id_boat int) error {
 	db := storage.GetDB()
 
-	boat, err := GetBoat(id_boat)
+	boat, err := GetBoat(id_user, id_boat)
 	if err != nil {
 		return err
 	}
@@ -1337,10 +1406,13 @@ func UpdateBoatSalesOrder(id int, id_boat int) error {
 		}
 	}
 
+	// Don't check log insert error for now
+	_ = audit.InsertLog(id_user, "/orders/:id/boat/:id_boat", "UPDATE", fmt.Sprintf("UPDATE request on sales order of id %d, change boat", id), query)
+
 	return nil
 }
 
-func RemoveAccessorySalesOrder(id int, id_accessory int) error {
+func RemoveAccessorySalesOrder(id_user int, id int, id_accessory int) error {
 	db := storage.GetDB()
 
 	// _, err := GetAccessory(id_accessory)
@@ -1355,13 +1427,16 @@ func RemoveAccessorySalesOrder(id int, id_accessory int) error {
 		return err
 	}
 
+	// Don't check log insert error for now
+	_ = audit.InsertLog(id_user, "/orders/:id/accessory/:id_accessory", "DELETE", fmt.Sprintf("DELETE request on sales order of id %d, remove accessory", id), query)
+
 	return nil
 }
 
-func UpdateAccessoryQtySalesOrder(id int, id_accessory int, update *models.UpdateSalesOrderItemQty) error {
+func UpdateAccessoryQtySalesOrder(id_user int, id int, id_accessory int, update *models.UpdateSalesOrderItemQty) error {
 	db := storage.GetDB()
 
-	_, err := GetAccessory(id_accessory)
+	_, err := GetAccessory(id_accessory, id_user)
 	if err != nil {
 		return err
 	}
@@ -1389,13 +1464,17 @@ func UpdateAccessoryQtySalesOrder(id int, id_accessory int, update *models.Updat
 	} else {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Accessory not found on boat")
 	}
+
+	// Don't check log insert error for now
+	_ = audit.InsertLog(id_user, "/orders/:id/accessory/:id_accessory/change-qty", "UPDATE", fmt.Sprintf("UPDATE request on sales order of id %d, change accessory quantity", id), query)
+
 	return nil
 }
 
-func UpdateAccessorySalesOrder(id int, id_accessory int) error {
+func UpdateAccessorySalesOrder(id_user int, id int, id_accessory int) error {
 	db := storage.GetDB()
 
-	acc, err := GetAccessory(id_accessory)
+	acc, err := GetAccessory(id_accessory, id_user)
 	if err != nil {
 		return err
 	}
@@ -1423,6 +1502,10 @@ func UpdateAccessorySalesOrder(id int, id_accessory int) error {
 	} else {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Accessory already added to this sales order")
 	}
+
+	// Don't check log insert error for now
+	_ = audit.InsertLog(id_user, "/orders/:id/accessory/:id_accessory", "UPDATE", fmt.Sprintf("UPDATE request on sales order of id %d, add accessory", id), query)
+
 	return nil
 }
 
@@ -1466,6 +1549,9 @@ func UpdateNegotiationAdvanceStage(id int, id_user int, negT *models.AdvanceNego
 	if err != nil {
 		return err
 	}
+
+	// Don't check log insert error for now
+	_ = audit.InsertLog(id_user, "/negotiations/:id/advance", "UPDATE", fmt.Sprintf("UPDATE request on business %d, advance stage", id), query)
 
 	return nil
 }

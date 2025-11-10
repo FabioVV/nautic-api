@@ -2,6 +2,7 @@ package reports
 
 import (
 	"nautic/cmd/repositories"
+	"nautic/cmd/utils"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -17,7 +18,12 @@ func GetNegotiationsReport(c echo.Context) error {
 	qdateIni := c.QueryParams().Get("dateIni")
 	qdateEnd := c.QueryParams().Get("dateEnd")
 
-	data, numRecords, err := repositories.GetNegotiationsReport(qpage, qperpage, qname, qpboat, qdateIni, qdateEnd)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	data, numRecords, err := repositories.GetNegotiationsReport(claims.Id, qpage, qperpage, qname, qpboat, qdateIni, qdateEnd)
 	if err != nil {
 		return err
 	}
@@ -38,7 +44,12 @@ func GetSalesOrdersReport(c echo.Context) error {
 	qdateIni := c.QueryParams().Get("dateIni")
 	qdateEnd := c.QueryParams().Get("dateEnd")
 
-	data, numRecords, err := repositories.GetSalesOrdersReport(qpage, qperpage, qname, qseller, qdateIni, qdateEnd)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	data, numRecords, err := repositories.GetSalesOrdersReport(claims.Id, qpage, qperpage, qname, qseller, qdateIni, qdateEnd)
 	if err != nil {
 		return err
 	}
@@ -59,7 +70,12 @@ func GetLostNegotiationsReport(c echo.Context) error {
 	qdateIni := c.QueryParams().Get("dateIni")
 	qdateEnd := c.QueryParams().Get("dateEnd")
 
-	data, numRecords, err := repositories.GetLostNegotiationsReport(qpage, qperpage, qname, qpboat, qdateIni, qdateEnd)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	data, numRecords, err := repositories.GetLostNegotiationsReport(claims.Id, qpage, qperpage, qname, qpboat, qdateIni, qdateEnd)
 	if err != nil {
 		return err
 	}

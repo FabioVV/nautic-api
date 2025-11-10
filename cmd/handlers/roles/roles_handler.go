@@ -2,6 +2,7 @@ package roles
 
 import (
 	"nautic/cmd/repositories"
+	"nautic/cmd/utils"
 	"nautic/models"
 	"nautic/validation"
 	"net/http"
@@ -21,7 +22,12 @@ func InsertRole(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
 	}
 
-	if err := repositories.InsertRole(role); err != nil {
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	if err := repositories.InsertRole(role, claims.Id); err != nil {
 		return err
 	}
 
@@ -36,7 +42,12 @@ func GetRoles(c echo.Context) error {
 	qname := c.QueryParams().Get("name")
 	qshow_admin := c.QueryParams().Get("show_admin")
 
-	roles, numRecords, err := repositories.GetRoles(qpage, qperpage, qname, qshow_admin)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	roles, numRecords, err := repositories.GetRoles(qpage, qperpage, qname, qshow_admin, claims.Id)
 	if err != nil {
 		return err
 	}
@@ -73,7 +84,12 @@ func GetRole(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	role, err := repositories.GetRole(rID)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	role, err := repositories.GetRole(rID, claims.Id)
 	if err != nil {
 		return err
 	}
@@ -95,7 +111,12 @@ func RemoveRolePermission(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	err = repositories.RemoveRolePermission(roleId, permId)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.RemoveRolePermission(roleId, permId, claims.Id)
 	if err != nil {
 		return err
 	}
@@ -113,7 +134,12 @@ func DeleteRole(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID format")
 	}
 
-	err = repositories.DeleteRole(rID)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.DeleteRole(rID, claims.Id)
 	if err != nil {
 		return err
 	}
@@ -137,7 +163,12 @@ func InsertRolePermission(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	err = repositories.InsertRolePermission(roleId, permId)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.InsertRolePermission(roleId, permId, claims.Id)
 	if err != nil {
 		return err
 	}
@@ -165,7 +196,12 @@ func UpdateRole(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID format")
 	}
 
-	err = repositories.UpdateRole(rID, rT)
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.UpdateRole(rID, claims.Id, rT)
 	if err != nil {
 		return err
 	}
