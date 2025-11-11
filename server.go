@@ -11,6 +11,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 
 	"nautic/auth"
+	"nautic/cmd/handlers/audit"
 	auth_h "nautic/cmd/handlers/auth"
 	"nautic/cmd/handlers/products"
 	"nautic/cmd/handlers/reports"
@@ -68,6 +69,15 @@ func main() {
 	userRoutes.PATCH("/:id", users.UpdateUser)
 	userRoutes.DELETE("/:id", users.DeactivateUser)
 	/*USER ROUTES*/
+
+	/*AUDIT ROUTES*/
+	auditRoutes := apiv1.Group("/audit")
+	auditRoutes.Use(echojwt.WithConfig(configJwt))
+	auditRoutes.Use(nmiddleware.CheckRoleAndPermissions)
+
+	auditRoutes.GET("/logs", audit.GetLogs)
+
+	/*AUDIT ROUTES*/
 
 	/*ROLES ROUTES*/
 	rolesRoutes := apiv1.Group("/roles")
