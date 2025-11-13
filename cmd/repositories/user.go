@@ -329,29 +329,29 @@ func UpdateUser(id int, id_user int, user *models.UpdateUserRequest) error {
 		return err
 	}
 
-	query := `UPDATE users SET`
+	query := `UPDATE users SET `
 	params := []interface{}{}
 	paramCount := 0
 
 	if user.Name != nil {
 		paramCount++
 		query += fmt.Sprintf("name = $%d, ", paramCount)
-		params = append(params, *user.Name)
+		params = append(params, *&user.Name)
 	}
 	if user.Email != nil {
 		paramCount++
 		query += fmt.Sprintf("email = $%d, ", paramCount)
-		params = append(params, *user.Email)
+		params = append(params, *&user.Email)
 	}
 	if user.Phone != nil {
 		paramCount++
 		query += fmt.Sprintf("phone = $%d, ", paramCount)
-		params = append(params, *user.Phone)
+		params = append(params, *&user.Phone)
 	}
 	if user.Active != nil {
 		paramCount++
 		query += fmt.Sprintf("active = $%d, ", paramCount)
-		params = append(params, *user.Active)
+		params = append(params, *&user.Active)
 	}
 
 	if len(params) == 0 {

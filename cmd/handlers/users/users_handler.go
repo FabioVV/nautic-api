@@ -163,9 +163,9 @@ func UpdateUser(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request payload")
 	}
 
-	if err := c.Validate(user); err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
-	}
+	// if err := c.Validate(user); err != nil {
+	// 	return c.JSON(http.StatusBadRequest, echo.Map{"errors": validation.FmtErrReturn(err)})
+	// }
 
 	userID, err := strconv.Atoi(idParam)
 	if err != nil {
