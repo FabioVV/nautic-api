@@ -8,7 +8,7 @@ import (
 	"gopkg.in/gomail.v2"
 )
 
-func SendSystemEmail(to string, subject string, body string) bool {
+func SendSystemEmail(to string, subject string, body string) error {
 	message := gomail.NewMessage()
 
 	message.SetHeader("From", os.Getenv("MAIL_USERNAME"))
@@ -32,10 +32,10 @@ func SendSystemEmail(to string, subject string, body string) bool {
 
 	if err := dialer.DialAndSend(message); err != nil {
 		fmt.Printf("Failed to send email: %v\n", err)
-		return false
+		return err
 	}
 
-	return true
+	return nil
 }
 
 func SendSystemSimpleEmail(from string, to []string, subject string, body string) bool {

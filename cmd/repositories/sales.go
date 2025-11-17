@@ -1563,10 +1563,10 @@ func SendQuoteViaEmail(id_user int, id int, email *models.EmailQuote) error {
 		return err
 	}
 
-	sent := mail.SendSystemEmail(*salesOrder.CustomerEmail,
+	err = mail.SendSystemEmail(*salesOrder.CustomerEmail,
 		fmt.Sprintf("%s: Orçamento/Pedido #%d", *email.Subject, *salesOrder.Id), fmt.Sprintf("%s\n\n Segue o link de acesso do seu orçamento/pedido: %s", *email.Body, *email.Url))
-	if !sent {
-		return echo.NewHTTPError(http.StatusInternalServerError, "Could not send email")
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Could not send email"+err.Error())
 	}
 
 	_ = audit.InsertLog(id_user, "/sales/orders/:id/send-quote", "POST", "Quote email sent to customer", "")
