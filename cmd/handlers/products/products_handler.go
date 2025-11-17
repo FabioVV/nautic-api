@@ -591,7 +591,13 @@ func GetBoatAds(c echo.Context) error {
 		return err
 	}
 
-	ads, err := repositories.GetBoatAds(claims.Id)
+	idParam := c.Param("id")
+	boatId, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	ads, err := repositories.GetBoatAds(claims.Id, boatId)
 	if err != nil {
 		return err
 	}
@@ -607,7 +613,13 @@ func GetBoatEngines(c echo.Context) error {
 		return err
 	}
 
-	boats, err := repositories.GetBoatEngines(claims.Id)
+	idParam := c.Param("id")
+	boatId, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	boats, err := repositories.GetBoatEngines(claims.Id, boatId)
 	if err != nil {
 		return err
 	}
@@ -623,7 +635,13 @@ func GetBoatAccessories(c echo.Context) error {
 		return err
 	}
 
-	boats, err := repositories.GetBoatAccessories(claims.Id)
+	idParam := c.Param("id")
+	boatId, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	boats, err := repositories.GetBoatAccessories(claims.Id, boatId)
 	if err != nil {
 		return err
 	}

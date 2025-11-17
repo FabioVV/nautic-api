@@ -745,6 +745,34 @@ func GetSalesOrderQuote(c echo.Context) error {
 	})
 }
 
+func SendQuoteViaEmail(c echo.Context) error {
+	idParam := c.Param("id")
+	idSalesOrder, err := strconv.Atoi(idParam)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	emailModel := new(models.EmailQuote)
+
+	if err := c.Bind(emailModel); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request payload")
+	}
+
+	claims, err := utils.GetLoggedInUserClaims(c)
+	if err != nil {
+		return err
+	}
+
+	err = repositories.SendQuoteViaEmail(claims.Id, idSalesOrder, emailModel)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Quote sent successfully",
+	})
+}
+
 func GetSalesOrder(c echo.Context) error {
 	idParam := c.Param("id")
 

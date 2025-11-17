@@ -33,7 +33,7 @@ func InsertBoat(id_user int, acc *models.CreateBoatRequest) error {
 	return nil
 }
 
-func GetBoatAds(id_user int) ([]models.BoatAd, error) {
+func GetBoatAds(id_user int, boatId int) ([]models.BoatAd, error) {
 	db := storage.GetDB()
 	var ads []models.BoatAd
 
@@ -41,12 +41,12 @@ func GetBoatAds(id_user int) ([]models.BoatAd, error) {
 	SELECT BA.id, BA.id_boat, BA.id_mean_communication, BA.link
 
 	FROM boat_ads AS BA
+	WHERE BA.id_boat = $1
 
 	ORDER BY BA.id
 	`
 
-	rows, err := db.Query(query)
-
+	rows, err := db.Query(query, boatId)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return ads, echo.NewHTTPError(http.StatusNotFound, "Boats ads not found")
@@ -69,7 +69,7 @@ func GetBoatAds(id_user int) ([]models.BoatAd, error) {
 	return ads, nil
 }
 
-func GetBoatEngines(id_user int) ([]models.Engine, error) {
+func GetBoatEngines(id_user int, boatId int) ([]models.Engine, error) {
 	db := storage.GetDB()
 	var engs []models.Engine
 
@@ -78,12 +78,11 @@ func GetBoatEngines(id_user int) ([]models.Engine, error) {
 
 	FROM boat_engines AS BE
 	INNER JOIN engines AS E ON BE.id_engine = E.id
-
+	WHERE BE.id_boat = $1
 	ORDER BY BE.id
 	`
 
-	rows, err := db.Query(query)
-
+	rows, err := db.Query(query, boatId)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return engs, echo.NewHTTPError(http.StatusNotFound, "Boats engines not found")
@@ -107,7 +106,7 @@ func GetBoatEngines(id_user int) ([]models.Engine, error) {
 	return engs, nil
 }
 
-func GetBoatAccessories(id_user int) ([]models.Accessory, error) {
+func GetBoatAccessories(id_user int, boatId int) ([]models.Accessory, error) {
 	db := storage.GetDB()
 	var accs []models.Accessory
 
@@ -117,12 +116,11 @@ func GetBoatAccessories(id_user int) ([]models.Accessory, error) {
 	FROM boat_accessories AS BA
 	INNER JOIN accessories AS A ON BA.id_accessory = A.id
 	INNER JOIN accessory_types AS AT ON A.id_accessory_type = AT.id
-
+	WHERE BA.id_boat = $1
 	ORDER BY BA.id
 	`
 
-	rows, err := db.Query(query)
-
+	rows, err := db.Query(query, boatId)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return accs, echo.NewHTTPError(http.StatusNotFound, "Boats accessories not found")

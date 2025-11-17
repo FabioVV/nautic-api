@@ -191,7 +191,7 @@ func main() {
 	salOrdRoutes.Use(nmiddleware.CheckRoleAndPermissions)
 	salOrdRoutes.POST("/negotiations/history/:id", sales.InsertSalesOrder)
 	salOrdRoutes.GET("/:id", sales.GetSalesOrder)
-	//salOrdRoutes.GET("/:id/quote", sales.GetSalesOrderQuote)
+	salOrdRoutes.POST("/:id/send-quote", sales.SendQuoteViaEmail)
 
 	/*SALES ORDERS ROUTES QUOTES*/
 	quoteRoutes := apiv1.Group("/sales/orders/:id/quote") // NO AUTH

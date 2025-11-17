@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"nautic/cmd/audit"
+	"nautic/cmd/mail"
 	"nautic/cmd/storage"
 	"nautic/cmd/utils"
 	"nautic/models"
@@ -1552,6 +1553,23 @@ func UpdateNegotiationAdvanceStage(id int, id_user int, negT *models.AdvanceNego
 
 	// Don't check log insert error for now
 	_ = audit.InsertLog(id_user, "/negotiations/:id/advance", "UPDATE", fmt.Sprintf("UPDATE request on business %d, advance stage", id), query)
+
+	return nil
+}
+
+func SendQuoteViaEmail(id_user int, id int, email *models.EmailQuote) error {
+	salesOrder, err := GetSalesOrder(id)
+	if err != nil {
+		return err
+	}
+
+	sent := mail.SendSystemEmail(*salesOrder.CustomerEmail,
+		fmt.Sprintf("%s: Orçamento/Pedido #%d", *email.Subject, *salesOrder.Id), fmt.Sprintf("%s\n\n Segue o link de acesso do seu orçamento/pedido: %s", *email.Body, *email.Url))
+	if !sent {
+		return echo.NewHTTPError(http.StatusInternalServerError, "Could not send email")
+	}
+
+	_ = audit.InsertLog(id_user, "/sales/orders/:id/send-quote", "POST", "Quote email sent to customer", "")
 
 	return nil
 }
