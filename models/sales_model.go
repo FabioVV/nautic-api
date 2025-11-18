@@ -42,9 +42,9 @@ type CustomerRequest struct {
 	Name           *string    `json:"Name" validate:"required"`
 	Email          *string    `json:"Email" validate:"required"`
 	Phone          *string    `json:"Phone" validate:"required"`
-	BirthDay       *time.Time `json:"Birthday"`
+	BirthDay       *time.Time `json:"Birthday,omitempty"`
 	PfPj           *string    `json:"PfPj" validate:"required"`
-	Cpf            *string    `json:"Cpf" `
+	Cpf            *string    `json:"Cpf"`
 	Cnpj           *string    `json:"Cnpj"`
 	Cep            *string    `json:"Cep" validate:"required"`
 	Street         *string    `json:"Street" validate:"required"`
